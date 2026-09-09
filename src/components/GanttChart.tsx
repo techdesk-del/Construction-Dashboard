@@ -216,86 +216,17 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   };
 
   return (
-    <div className="gantt-wrap">
-      {/* ── TOP HORIZONTAL TIMELINE SLIDE CONTROLLER ── */}
-      <div className="timeline-slide-toolbar">
-        <div className="timeline-slide-left">
-          <div className="slide-badge">
-            <Sliders size={13} />
-            <span>Timeline Slide Navigator</span>
-          </div>
-
-          <div className="slide-btn-group">
-            <button
-              type="button"
-              className="slide-step-btn"
-              onClick={() => slideBy(-300)}
-              title="Slide View Left"
-            >
-              <ChevronLeft size={14} /> Slide Left
-            </button>
-
-            <button
-              type="button"
-              className="slide-step-btn"
-              onClick={() => slideBy(300)}
-              title="Slide View Right"
-            >
-              Slide Right <ChevronRight size={14} />
-            </button>
-          </div>
-
-          <div className="timeline-slider-track-wrap">
-            <span className="slider-end-label">Table</span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={scrollPct}
-              onChange={handleSliderChange}
-              className="timeline-range-slider"
-              title={`Slide View Position (${scrollPct}%)`}
-            />
-            <span className="slider-end-label">Gantt</span>
-            <span className="slider-pct-pill">{scrollPct}%</span>
-          </div>
-        </div>
-
-        <div className="timeline-slide-right">
-          <button
-            type="button"
-            className={`preset-jump-btn ${scrollPct < 15 ? 'active' : ''}`}
-            onClick={() => jumpToView('details')}
-            title="Jump to Table Details (ID, Activity, Responsible)"
-          >
-            <List size={12} /> Details View
-          </button>
-          <button
-            type="button"
-            className="preset-jump-btn"
-            onClick={() => jumpToView('today')}
-            title="Jump to Today's Timeline Line"
-          >
-            <Calendar size={12} /> Jump to Today
-          </button>
-          <button
-            type="button"
-            className={`preset-jump-btn ${scrollPct > 45 ? 'active' : ''}`}
-            onClick={() => jumpToView('gantt')}
-            title="Jump to Gantt Timeline Bar Chart"
-          >
-            <MoveHorizontal size={12} /> Gantt Timeline
-          </button>
-          <button
-            type="button"
-            className="preset-jump-btn"
-            onClick={() => jumpToView('end')}
-            title="Scroll to End of Project"
-          >
-            Project End ⏭
-          </button>
-        </div>
-      </div>
+    <div className="gantt-wrap" style={{ position: 'relative' }}>
+      {/* ── INLINE FLOATING SLIDE PILL INSIDE TABLE WRAPPER ── */}
+      <button
+        type="button"
+        className="table-floating-slide-pill"
+        onClick={() => slideBy(scrollPct > 20 ? -500 : 500)}
+        title={scrollPct > 20 ? "Slide left to table columns" : "Slide right to Gantt timeline"}
+      >
+        <MoveHorizontal size={13} />
+        <span>{scrollPct > 20 ? '◀ Slide to Table' : 'Slide to Timeline ▶'}</span>
+      </button>
 
       {/* ── SCROLLABLE GANTT TABLE WITH FREEZE-PANES ── */}
       <div 
@@ -313,7 +244,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             <col style={{ width: '60px' }} />
             <col style={{ width: '95px' }} />
             <col style={{ width: '110px' }} />
-            <col style={{ width: '75px' }} />
+            <col style={{ width: '90px' }} />
             <col style={{ minWidth: '950px' }} />
           </colgroup>
           <thead>
@@ -326,7 +257,19 @@ export const GanttChart: React.FC<GanttChartProps> = ({
               <th style={{ textAlign: 'center' }}>Days</th>
               <th style={{ textAlign: 'center' }}>% Done</th>
               <th>Status</th>
-              <th style={{ textAlign: 'center' }}>Action</th>
+              <th style={{ textAlign: 'center' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                  <span>Action</span>
+                  <button
+                    type="button"
+                    className="table-inline-slide-btn"
+                    onClick={() => slideBy(scrollPct > 20 ? -500 : 500)}
+                    title={scrollPct > 20 ? "Slide left to task details" : "Slide right to Gantt timeline"}
+                  >
+                    <MoveHorizontal size={13} />
+                  </button>
+                </div>
+              </th>
               <th className="chart-col">
                 <div className="chart-header">
                   {/* Top Tier: Month Bands */}
@@ -367,7 +310,20 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             {groupedPhases.map((group) => (
               <React.Fragment key={group.phase}>
                 <tr className="phase-row phase-header-row">
-                  <td colSpan={10} className="sticky-col-id">{group.phase}</td>
+                  <td colSpan={10} className="sticky-col-id">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '16px' }}>
+                      <span>{group.phase}</span>
+                      <button
+                        type="button"
+                        className="phase-inline-slide-btn"
+                        onClick={() => slideBy(scrollPct > 20 ? -500 : 500)}
+                        title={scrollPct > 20 ? "Slide left to view all columns" : "Slide right to view Gantt timeline"}
+                      >
+                        <MoveHorizontal size={12} />
+                        <span>{scrollPct > 20 ? '◀ Slide to Table' : 'Slide to Timeline ▶'}</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
                 {group.items.map((act) => {
                   const status = computeStatus(act);
