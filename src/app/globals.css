@@ -1752,6 +1752,43 @@ body {
   transform: scale(1.1);
 }
 
+/* ── ROW 5 (MS FABRICATION ROOF) DOCKED SLIDE ARROWS ── */
+.table-mid-row-arrow-dock {
+  position: absolute;
+  top: 250px;
+  right: 12px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #ffffff;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+
+.col-dock-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: #f8fafc;
+  color: var(--blue);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.col-dock-arrow-btn:hover {
+  background: var(--blue-light);
+  border-color: var(--blue-border);
+  color: var(--blue-hover);
+  transform: scale(1.08);
+}
+
 /* ── ENTERPRISE PAGINATION STYLING ── */
 .pagination-bar {
   display: flex;
