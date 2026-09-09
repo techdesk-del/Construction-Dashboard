@@ -8,6 +8,8 @@ interface RateLimitRecord {
   resetTime: number;
 }
 
+
+
 const rateLimitStore = new Map<string, RateLimitRecord>();
 
 // Clean up stale IP records periodically
@@ -21,6 +23,8 @@ if (typeof setInterval !== 'undefined') {
     }
   }, 5 * 60 * 1000);
 }
+
+
 
 export function rateLimit(
   identifier: string,

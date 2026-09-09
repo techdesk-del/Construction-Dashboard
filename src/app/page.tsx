@@ -5,8 +5,10 @@ import { Activity, MaterialItem, ActivityStatus } from '@/types';
 import { INITIAL_ACTIVITIES, INITIAL_MATERIALS } from '@/lib/initialData';
 import { computeKpis, computeStatus, exportActivitiesToCSV, exportActivitiesToJSON } from '@/lib/utils';
 import { Header } from '@/components/Header';
+import { Sidebar, ViewMode } from '@/components/Sidebar';
+import { TopNavHeader } from '@/components/TopNavHeader';
 import { KpiGrid } from '@/components/KpiGrid';
-import { Toolbar, ViewMode } from '@/components/Toolbar';
+import { Toolbar } from '@/components/Toolbar';
 import { GanttChart } from '@/components/GanttChart';
 import { KanbanView } from '@/components/KanbanView';
 import { MaterialTracker } from '@/components/MaterialTracker';
@@ -316,45 +318,99 @@ function DashboardContent() {
     );
   }
 
+  const phases = [
+    'Critical Civil & External',
+    'Swimming Pool',
+    'Services',
+    'Finishes',
+    'Openings',
+    'Interior',
+  ];
+
   return (
-    <div className="app-container">
-      {/* Executive Command Header */}
-      <Header 
-        lastUpdated={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-        onOpenAddActivity={() => {
-          setEditingActivity(null);
-          setActivityModalOpen(true);
-        }}
-        onDownloadCSV={handleDownloadCSV}
-        onDownloadJSON={handleDownloadJSON}
-        onResetData={handleReset}
+    <div className="crm-app-shell">
+      {/* ── LEFT SIDEBAR NAVIGATION ── */}
+      <Sidebar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
         user={user}
-        onOpenLogin={() => setLoginModalOpen(true)}
         onLogout={async () => {
           await logout();
           showToast('Signed out of executive session');
         }}
+        onResetData={handleReset}
       />
 
-      <main className="main-content">
-        {/* Executive KPI Suite */}
-        <KpiGrid kpis={kpis} />
-
-        {/* Dynamic Toolbar */}
-        <Toolbar 
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          selectedPhase={selectedPhase}
-          onPhaseChange={setSelectedPhase}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
+      {/* ── RIGHT MAIN VIEWPORT ── */}
+      <div className="crm-main-viewport">
+        {/* Top Command Bar */}
+        <TopNavHeader 
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onOpenAddActivity={() => {
+            setEditingActivity(null);
+            setActivityModalOpen(true);
+          }}
+          onOpenAddMaterial={() => {
+            setEditingMaterial(null);
+            setMaterialModalOpen(true);
+          }}
+          onDownloadCSV={handleDownloadCSV}
+          onDownloadJSON={handleDownloadJSON}
+          onResetData={handleReset}
+          user={user}
         />
 
-        {/* View Switcher Engine */}
-        {viewMode === 'gantt' && (
-          <>
+        {/* Dashboard Content Body */}
+        <main className="crm-dashboard-body">
+          {/* Welcome Header */}
+          <div className="crm-page-header">
+            <div>
+              <h1 className="crm-page-title">
+                {viewMode === 'gantt' && 'Dashboard'}
+                {viewMode === 'kanban' && 'Execution Board'}
+                {viewMode === 'materials' && 'Procurement Matrix'}
+                {viewMode === 'analytics' && 'Analytics & Resource Load'}
+              </h1>
+              <p className="crm-page-subtitle">
+                Welcome back, <strong>{user?.name || 'Executive CEO'}</strong> • Chakramsar Farmhouse ERP
+              </p>
+            </div>
+
+            {/* Quick Phase & Status Filters */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <select 
+                className="select-input"
+                value={selectedPhase}
+                onChange={(e) => setSelectedPhase(e.target.value)}
+                style={{ fontSize: '12px', height: '36px', background: '#fff' }}
+              >
+                <option value="">All Construction Phases</option>
+                {phases.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+
+              <select 
+                className="select-input"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                style={{ fontSize: '12px', height: '36px', background: '#fff' }}
+              >
+                <option value="">All Statuses</option>
+                <option value="Completed">Completed</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Not Started">Not Started</option>
+                <option value="Due Soon">Due Soon / Overdue</option>
+              </select>
+            </div>
+          </div>
+
+          {/* CRM-Style KPI Deck */}
+          <KpiGrid kpis={kpis} />
+
+          {/* Active View Engine */}
+          {viewMode === 'gantt' && (
             <GanttChart 
               activities={filteredActivities}
               onUpdateActivity={handleUpdateActivity}
@@ -366,8 +422,23 @@ function DashboardContent() {
                 }
               }}
             />
+          )}
 
-            {/* Material & Procurement Tracker embedded below Gantt */}
+          {viewMode === 'kanban' && (
+            <KanbanView 
+              activities={filteredActivities}
+              onUpdateActivity={handleUpdateActivity}
+              onEditActivityModal={(id) => {
+                const found = activities.find((a) => a.id === id);
+                if (found) {
+                  setEditingActivity(found);
+                  setActivityModalOpen(true);
+                }
+              }}
+            />
+          )}
+
+          {viewMode === 'materials' && (
             <MaterialTracker 
               materials={materials}
               onAddMaterial={() => {
@@ -380,60 +451,22 @@ function DashboardContent() {
               }}
               onDeleteMaterial={handleDeleteMaterial}
             />
-          </>
-        )}
+          )}
 
-        {viewMode === 'kanban' && (
-          <KanbanView 
-            activities={filteredActivities}
-            onUpdateActivity={handleUpdateActivity}
-            onEditActivityModal={(id) => {
-              const found = activities.find((a) => a.id === id);
-              if (found) {
-                setEditingActivity(found);
-                setActivityModalOpen(true);
-              }
-            }}
-          />
-        )}
+          {viewMode === 'analytics' && (
+            <AnalyticsView 
+              activities={activities}
+              materials={materials}
+            />
+          )}
 
-        {viewMode === 'materials' && (
-          <MaterialTracker 
-            materials={materials}
-            onAddMaterial={() => {
-              setEditingMaterial(null);
-              setMaterialModalOpen(true);
-            }}
-            onEditMaterial={(mat) => {
-              setEditingMaterial(mat);
-              setMaterialModalOpen(true);
-            }}
-            onDeleteMaterial={handleDeleteMaterial}
-          />
-        )}
-
-        {viewMode === 'analytics' && (
-          <AnalyticsView 
-            activities={activities}
-            materials={materials}
-          />
-        )}
-
-        {/* Executive Minimal Footer */}
-        <footer style={{
-          marginTop: 'auto',
-          paddingTop: '16px',
-          borderTop: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '11.5px',
-          color: 'var(--text-muted)',
-        }}>
-          <span>© 2026 Chakramsar Farmhouse • Master Capital Project Schedule</span>
-          <span>⚡ Real-Time Project Sync Active</span>
-        </footer>
-      </main>
+          {/* Executive Clean Footer */}
+          <footer className="crm-footer">
+            <span>© 2026 Chakramsar Farmhouse • Master Capital Project ERP</span>
+            <span>⚡ Real-Time Project Sync Active</span>
+          </footer>
+        </main>
+      </div>
 
       {/* Activity Add/Edit Modal */}
       <ActivityModal 
