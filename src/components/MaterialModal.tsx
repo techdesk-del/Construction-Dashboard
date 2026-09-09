@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { MaterialItem, MaterialDeliveryStatus, MaterialWorkStatus, PhaseName } from '@/types';
-import { X, Trash2 } from 'lucide-react';
+import { 
+  X, 
+  Trash2, 
+  PackageCheck, 
+  Calendar, 
+  User, 
+  Layers,
+  Plus
+} from 'lucide-react';
 
 interface MaterialModalProps {
   isOpen: boolean;
@@ -67,55 +75,91 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        {/* Modal Header */}
         <div className="modal-header">
-          <h2>{material ? 'Edit Material Item' : 'Add Procurement Material'}</h2>
-          <button className="btn btn-outline btn-sm" onClick={onClose}>
-            <X size={14} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--emerald-light)',
+              color: 'var(--emerald)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--emerald-border)',
+            }}>
+              {material ? <PackageCheck size={18} /> : <Plus size={18} />}
+            </div>
+            <div>
+              <h2>{material ? 'Edit Procurement Material' : 'Add Procurement Material'}</h2>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                {material ? `Item ID: #${material.id}` : 'Track delivery milestones and suppliers'}
+              </div>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            className="btn btn-outline btn-sm btn-icon" 
+            onClick={onClose}
+            title="Close dialog"
+          >
+            <X size={15} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            {/* Name */}
             <div className="form-group col-full">
-              <label>Material / Component Name *</label>
+              <label htmlFor="modal-mat-name">Material / Component Name *</label>
               <input 
+                id="modal-mat-name"
                 type="text"
-                placeholder="e.g. Waterproofing Chemicals"
+                placeholder="e.g. Waterproofing Chemicals, Kota Stone"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                autoFocus
               />
             </div>
 
+            {/* Delivery Status */}
             <div className="form-group">
-              <label>Material Delivery Status *</label>
+              <label htmlFor="modal-mat-status">Delivery Status *</label>
               <select 
+                id="modal-mat-status"
                 value={formData.mat}
                 onChange={(e) => setFormData({ ...formData, mat: e.target.value as MaterialDeliveryStatus })}
               >
-                <option value="Delivered">Delivered</option>
-                <option value="To be Delivered">To be Delivered</option>
-                <option value="Selection Pending">Selection Pending</option>
-                <option value="Partial">Partial</option>
+                <option value="Delivered">🟢 Delivered to Site</option>
+                <option value="To be Delivered">🟣 To be Delivered</option>
+                <option value="Selection Pending">🟡 Selection Pending</option>
+                <option value="Partial">🔵 Partial Delivery</option>
               </select>
             </div>
 
+            {/* Work Execution */}
             <div className="form-group">
-              <label>Work Status</label>
+              <label htmlFor="modal-work-status">Work Execution Status</label>
               <select 
+                id="modal-work-status"
                 value={formData.work}
                 onChange={(e) => setFormData({ ...formData, work: e.target.value as MaterialWorkStatus })}
               >
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Complete">Complete</option>
-                <option value="Not Started">Not Started</option>
+                <option value="Not Started">⚪ Not Started</option>
+                <option value="Pending">🟡 Pending</option>
+                <option value="In Progress">🔵 In Progress</option>
+                <option value="Complete">🟢 Complete</option>
               </select>
             </div>
 
+            {/* Deadline */}
             <div className="form-group">
-              <label>Procurement Deadline *</label>
+              <label htmlFor="modal-mat-deadline">Procurement Deadline *</label>
               <input 
+                id="modal-mat-deadline"
                 type="text"
                 placeholder="e.g. 15 Sep 2026"
                 value={formData.deadline}
@@ -124,32 +168,37 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
               />
             </div>
 
+            {/* Vendor */}
             <div className="form-group">
-              <label>Responsible Vendor / Supplier</label>
+              <label htmlFor="modal-mat-resp">Responsible Supplier / Vendor</label>
               <input 
+                id="modal-mat-resp"
                 type="text"
-                placeholder="e.g. RS Construction"
+                placeholder="e.g. RS Construction, Kitchen Vendor"
                 value={formData.resp}
                 onChange={(e) => setFormData({ ...formData, resp: e.target.value })}
               />
             </div>
 
+            {/* Phase */}
             <div className="form-group col-full">
-              <label>Associated Phase</label>
+              <label htmlFor="modal-mat-phase">Associated Construction Phase</label>
               <select 
+                id="modal-mat-phase"
                 value={formData.phase}
                 onChange={(e) => setFormData({ ...formData, phase: e.target.value as PhaseName })}
               >
                 <option value="Critical Civil & External">Critical Civil &amp; External</option>
                 <option value="Swimming Pool">Swimming Pool</option>
-                <option value="Services">Services</option>
-                <option value="Finishes">Finishes</option>
-                <option value="Openings">Openings</option>
-                <option value="Interior">Interior</option>
+                <option value="Services">Services (Plumbing &amp; Electrical)</option>
+                <option value="Finishes">Finishes (Ceiling, Tiling, Paint)</option>
+                <option value="Openings">Openings (Doors, Windows, Stairs)</option>
+                <option value="Interior">Interior (Furniture, ELV)</option>
               </select>
             </div>
           </div>
 
+          {/* Modal Footer */}
           <div className="modal-footer">
             {material && onDelete && (
               <button 
@@ -170,7 +219,7 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Save Material
+              {material ? 'Update Material' : 'Save Material'}
             </button>
           </div>
         </form>

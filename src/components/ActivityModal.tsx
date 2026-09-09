@@ -2,7 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { Activity, PhaseName, PriorityLevel } from '@/types';
-import { X, Trash2 } from 'lucide-react';
+import { 
+  X, 
+  Trash2, 
+  Building2, 
+  Calendar, 
+  Flag, 
+  User, 
+  Link as LinkIcon, 
+  CheckCircle2, 
+  FileText,
+  Plus
+} from 'lucide-react';
 
 interface ActivityModalProps {
   isOpen: boolean;
@@ -78,56 +89,92 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        {/* Modal Header */}
         <div className="modal-header">
-          <h2>{activity ? 'Edit Activity' : 'Add New Activity'}</h2>
-          <button className="btn btn-outline btn-sm" onClick={onClose}>
-            <X size={14} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: 'var(--radius-sm)',
+              background: 'var(--blue-light)',
+              color: 'var(--blue)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--blue-border)',
+            }}>
+              {activity ? <Building2 size={18} /> : <Plus size={18} />}
+            </div>
+            <div>
+              <h2>{activity ? 'Edit Schedule Activity' : 'Add New Schedule Activity'}</h2>
+              <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
+                {activity ? `Activity ID: #${activity.id}` : 'Create a master schedule milestone'}
+              </div>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            className="btn btn-outline btn-sm btn-icon" 
+            onClick={onClose}
+            title="Close dialog"
+          >
+            <X size={15} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            {/* Task Name */}
             <div className="form-group col-full">
-              <label>Activity Name *</label>
+              <label htmlFor="modal-act-name">Activity Name *</label>
               <input 
+                id="modal-act-name"
                 type="text"
-                placeholder="e.g. Waterproofing"
+                placeholder="e.g. Waterproofing Basement & Terrace"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
+                autoFocus
               />
             </div>
 
+            {/* Construction Phase */}
             <div className="form-group">
-              <label>Phase *</label>
+              <label htmlFor="modal-act-phase">Construction Phase *</label>
               <select 
+                id="modal-act-phase"
                 value={formData.phase}
                 onChange={(e) => setFormData({ ...formData, phase: e.target.value as PhaseName })}
               >
                 <option value="Critical Civil & External">Critical Civil &amp; External</option>
                 <option value="Swimming Pool">Swimming Pool</option>
-                <option value="Services">Services</option>
-                <option value="Finishes">Finishes</option>
-                <option value="Openings">Openings</option>
-                <option value="Interior">Interior</option>
+                <option value="Services">Services (Plumbing &amp; Electrical)</option>
+                <option value="Finishes">Finishes (Ceiling, Tiling, Paint)</option>
+                <option value="Openings">Openings (Doors, Windows, Stairs)</option>
+                <option value="Interior">Interior (Furniture, ELV)</option>
               </select>
             </div>
 
+            {/* Priority */}
             <div className="form-group">
-              <label>Priority</label>
+              <label htmlFor="modal-act-priority">Priority Level</label>
               <select 
+                id="modal-act-priority"
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value as PriorityLevel })}
               >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                <option value="High">🔴 High Priority (Critical Path)</option>
+                <option value="Medium">🟡 Medium Priority (Standard)</option>
+                <option value="Low">🔵 Low Priority (Flexible)</option>
               </select>
             </div>
 
+            {/* Start Date */}
             <div className="form-group">
-              <label>Start Date *</label>
+              <label htmlFor="modal-act-start">Start Date *</label>
               <input 
+                id="modal-act-start"
                 type="date"
                 value={formData.start}
                 onChange={(e) => setFormData({ ...formData, start: e.target.value })}
@@ -135,9 +182,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               />
             </div>
 
+            {/* Deadline */}
             <div className="form-group">
-              <label>Deadline *</label>
+              <label htmlFor="modal-act-end">Target Deadline *</label>
               <input 
+                id="modal-act-end"
                 type="date"
                 value={formData.end}
                 onChange={(e) => setFormData({ ...formData, end: e.target.value })}
@@ -145,19 +194,23 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               />
             </div>
 
+            {/* Contractor */}
             <div className="form-group">
-              <label>Responsible Contractor / Team</label>
+              <label htmlFor="modal-act-resp">Contractor / Assignee</label>
               <input 
+                id="modal-act-resp"
                 type="text"
-                placeholder="e.g. RS Construction"
+                placeholder="e.g. RS Construction, Aditya Civil"
                 value={formData.resp}
                 onChange={(e) => setFormData({ ...formData, resp: e.target.value })}
               />
             </div>
 
+            {/* Dependency */}
             <div className="form-group">
-              <label>Dependency (Activity Name)</label>
+              <label htmlFor="modal-act-dep">Dependency Milestone</label>
               <input 
+                id="modal-act-dep"
                 type="text"
                 placeholder="e.g. Brick Masonary"
                 value={formData.dep}
@@ -165,9 +218,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               />
             </div>
 
+            {/* Status */}
             <div className="form-group">
-              <label>Current Status</label>
+              <label htmlFor="modal-act-status">Execution Status</label>
               <select 
+                id="modal-act-status"
                 value={formData.status}
                 onChange={(e) => {
                   const s = e.target.value as any;
@@ -177,15 +232,17 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   setFormData({ ...formData, status: s, pct: newPct });
                 }}
               >
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
+                <option value="Not Started">⚪ Not Started</option>
+                <option value="In Progress">🔵 In Progress</option>
+                <option value="Completed">🟢 Completed</option>
               </select>
             </div>
 
+            {/* % Done */}
             <div className="form-group">
-              <label>% Complete (0–100)</label>
+              <label htmlFor="modal-act-pct">Completion Percentage ({formData.pct}%)</label>
               <input 
+                id="modal-act-pct"
                 type="number"
                 min="0"
                 max="100"
@@ -200,10 +257,12 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               />
             </div>
 
+            {/* Remarks */}
             <div className="form-group col-full">
-              <label>Remarks &amp; Site Notes</label>
+              <label htmlFor="modal-act-remarks">Site Notes &amp; Specifications</label>
               <textarea 
-                placeholder="Any site obstacles, lead times, or specifications..."
+                id="modal-act-remarks"
+                placeholder="Specify materials needed, technical notes, or critical lead times..."
                 rows={3}
                 value={formData.remarks}
                 onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
@@ -211,6 +270,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             </div>
           </div>
 
+          {/* Modal Footer Actions */}
           <div className="modal-footer">
             {activity && onDelete && (
               <button 
@@ -218,7 +278,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 className="btn btn-danger btn-sm"
                 style={{ marginRight: 'auto' }}
                 onClick={() => {
-                  if (confirm(`Delete "${activity.name}"? This action cannot be undone.`)) {
+                  if (confirm(`Delete "${activity.name}"? This will permanently remove it from MongoDB.`)) {
                     onDelete(activity.id);
                   }
                 }}
@@ -231,7 +291,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Save Activity
+              {activity ? 'Update Activity' : 'Save to Schedule'}
             </button>
           </div>
         </form>
