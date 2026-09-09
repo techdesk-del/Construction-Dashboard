@@ -3,15 +3,27 @@ import { connectToDatabase, memoryStore } from '@/lib/db';
 import MaterialModel from '@/models/Material';
 import { MaterialItem } from '@/types';
 import { INITIAL_MATERIALS } from '@/lib/initialData';
+import { 
+  rateLimit, 
+  getClientIp, 
+  sanitizeInput, 
+  authenticateRequest, 
+  authorizeRole 
+} from '@/lib/security';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '0', 10);
+    const limit = parseInt(searchParams.get('limit') || '0', 10);
+    const statusFilter = searchParams.get('status');
+
     const db = await connectToDatabase();
     if (db) {
       const count = await MaterialModel.countDocuments();
       if (count === 0) {
         // Seed initial materials
-        const seedData = INITIAL_MATERIALS.map(m => ({
+        const seedData = INITIAL_MATERIALS.map((m) => ({
           materialId: m.id,
           name: m.name,
           mat: m.mat,
@@ -23,7 +35,18 @@ export async function GET() {
         }));
         await MaterialModel.insertMany(seedData);
       }
-      const docs = await MaterialModel.find().sort({ materialId: 1 }).lean();
+
+      const query: any = {};
+      if (statusFilter) query.mat = statusFilter;
+
+      const totalMatching = await MaterialModel.countDocuments(query);
+
+      let findQuery = MaterialModel.find(query).sort({ materialId: 1 }).lean();
+      if (page > 0 && limit > 0) {
+        findQuery = findQuery.skip((page - 1) * limit).limit(limit);
+      }
+
+      const docs = await findQuery;
       const materials: MaterialItem[] = docs.map((d: any) => ({
         id: d.materialId,
         name: d.name,
@@ -34,10 +57,40 @@ export async function GET() {
         phase: d.phase,
         notes: d.notes,
       }));
-      return NextResponse.json({ success: true, data: materials });
+
+      return NextResponse.json({
+        success: true,
+        data: materials,
+        pagination: page > 0 && limit > 0 ? {
+          total: totalMatching,
+          page,
+          limit,
+          totalPages: Math.ceil(totalMatching / limit),
+        } : undefined,
+      });
     }
 
-    return NextResponse.json({ success: true, data: memoryStore.getMaterials() });
+    let allMaterials = memoryStore.getMaterials();
+    if (statusFilter) {
+      allMaterials = allMaterials.filter((m) => m.mat === statusFilter);
+    }
+
+    if (page > 0 && limit > 0) {
+      const startIdx = (page - 1) * limit;
+      const paginated = allMaterials.slice(startIdx, startIdx + limit);
+      return NextResponse.json({
+        success: true,
+        data: paginated,
+        pagination: {
+          total: allMaterials.length,
+          page,
+          limit,
+          totalPages: Math.ceil(allMaterials.length / limit),
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true, data: allMaterials });
   } catch (error: any) {
     console.error('Error fetching materials:', error);
     return NextResponse.json({ success: true, data: memoryStore.getMaterials() });
@@ -46,7 +99,22 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // 1. Rate Limiter
+    const ip = getClientIp(req);
+    const rl = rateLimit(`mutate-mat:${ip}`, 60, 60 * 1000);
+    if (!rl.success) {
+      return NextResponse.json({ success: false, error: 'Rate limit exceeded. Please wait a moment.' }, { status: 429 });
+    }
+
+    // 2. RBAC Guard
+    const auth = authenticateRequest(req);
+    if (auth.authenticated && !authorizeRole(auth.user)) {
+      return NextResponse.json({ success: false, error: 'Access Denied: Read-only accounts cannot add materials.' }, { status: 403 });
+    }
+
+    // 3. Input Sanitization
+    const rawBody = await req.json();
+    const body = sanitizeInput(rawBody);
     const { name, mat, work, resp, deadline, phase, notes } = body;
 
     if (!name || !deadline) {
@@ -101,7 +169,22 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json();
+    // 1. Rate Limiter
+    const ip = getClientIp(req);
+    const rl = rateLimit(`mutate-mat:${ip}`, 120, 60 * 1000);
+    if (!rl.success) {
+      return NextResponse.json({ success: false, error: 'Rate limit exceeded. Please wait a moment.' }, { status: 429 });
+    }
+
+    // 2. RBAC Guard
+    const auth = authenticateRequest(req);
+    if (auth.authenticated && !authorizeRole(auth.user)) {
+      return NextResponse.json({ success: false, error: 'Access Denied: Read-only accounts cannot modify materials.' }, { status: 403 });
+    }
+
+    // 3. Input Sanitization
+    const rawBody = await req.json();
+    const body = sanitizeInput(rawBody);
     const { id, ...updates } = body;
 
     if (!id) {
@@ -148,6 +231,19 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    // 1. Rate Limiter
+    const ip = getClientIp(req);
+    const rl = rateLimit(`mutate-mat:${ip}`, 60, 60 * 1000);
+    if (!rl.success) {
+      return NextResponse.json({ success: false, error: 'Rate limit exceeded. Please wait a moment.' }, { status: 429 });
+    }
+
+    // 2. RBAC Guard
+    const auth = authenticateRequest(req);
+    if (auth.authenticated && !authorizeRole(auth.user)) {
+      return NextResponse.json({ success: false, error: 'Access Denied: Read-only accounts cannot delete materials.' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const idParam = searchParams.get('id');
 

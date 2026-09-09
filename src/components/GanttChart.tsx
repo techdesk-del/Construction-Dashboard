@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Activity, ActivityStatus } from '@/types';
 import { 
   parseDate, 
@@ -10,7 +10,17 @@ import {
   computeStatus, 
   getDateRange 
 } from '@/lib/utils';
-import { Edit2, AlertCircle } from 'lucide-react';
+import { 
+  Edit2, 
+  AlertCircle, 
+  ChevronLeft, 
+  ChevronRight, 
+  Sliders, 
+  Calendar, 
+  List, 
+  MoveHorizontal 
+} from 'lucide-react';
+import { Pagination } from './Pagination';
 
 interface GanttChartProps {
   activities: Activity[];
@@ -35,18 +45,28 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   const [editValue, setEditValue] = useState<string>('');
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // ── HORIZONTAL SLIDE & SCROLL CONTROLLER STATE ──
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollPct, setScrollPct] = useState<number>(0);
 
-  const { min, max } = getDateRange(activities);
-  const totalSpan = max.getTime() - min.getTime();
+  // ── PAGINATION STATE ──
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const { min, max } = useMemo(() => getDateRange(activities), [activities]);
+  const totalSpan = useMemo(() => max.getTime() - min.getTime(), [min, max]);
 
   // Generate weekly timeline ticks for the chart header
-  const generateTicks = () => {
-    const ticks: { dateStr: string; pct: number }[] = [];
+  const ticks = useMemo(() => {
+    const items: { dateStr: string; pct: number }[] = [];
     const cur = new Date(min);
     cur.setHours(0, 0, 0, 0);
-    // Align to Monday (August 3, 2026)
     const day = cur.getDay();
     if (day !== 1) {
       cur.setDate(cur.getDate() + ((8 - day) % 7));
@@ -55,20 +75,64 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     while (cur <= max) {
       const pct = ((cur.getTime() - min.getTime()) / totalSpan) * 100;
       if (pct >= 0 && pct <= 100) {
-        ticks.push({
+        items.push({
           dateStr: cur.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
           pct,
         });
       }
       cur.setDate(cur.getDate() + 7);
     }
-    return ticks;
+    return items;
+  }, [min, max, totalSpan]);
+
+  const todayPct = useMemo(() => {
+    return Math.max(0, Math.min(100, ((today.getTime() - min.getTime()) / totalSpan) * 100));
+  }, [today, min, totalSpan]);
+
+  // ── HORIZONTAL SLIDE HANDLERS ──
+  const handleContainerScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll > 0) {
+      setScrollPct(Math.round((scrollLeft / maxScroll) * 100));
+    }
   };
 
-  const ticks = generateTicks();
-  const todayPct = Math.max(0, Math.min(100, ((today.getTime() - min.getTime()) / totalSpan) * 100));
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPct = Number(e.target.value);
+    setScrollPct(newPct);
+    if (scrollContainerRef.current) {
+      const { scrollWidth, clientWidth } = scrollContainerRef.current;
+      const maxScroll = scrollWidth - clientWidth;
+      scrollContainerRef.current.scrollLeft = (newPct / 100) * maxScroll;
+    }
+  };
 
-  // Inline editing handlers
+  const slideBy = (pixels: number) => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: pixels, behavior: 'smooth' });
+    }
+  };
+
+  const jumpToView = (type: 'details' | 'today' | 'gantt' | 'end') => {
+    if (!scrollContainerRef.current) return;
+    const { scrollWidth, clientWidth } = scrollContainerRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+
+    if (type === 'details') {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    } else if (type === 'gantt') {
+      scrollContainerRef.current.scrollTo({ left: 750, behavior: 'smooth' });
+    } else if (type === 'today') {
+      const target = 750 + (todayPct / 100) * 950;
+      scrollContainerRef.current.scrollTo({ left: Math.min(target, maxScroll), behavior: 'smooth' });
+    } else if (type === 'end') {
+      scrollContainerRef.current.scrollTo({ left: maxScroll, behavior: 'smooth' });
+    }
+  };
+
+  // ── INLINE EDITING HANDLERS ──
   const startEditing = (id: number, field: 'name' | 'resp' | 'start' | 'end' | 'pct', initialVal: any) => {
     setEditingCell({ id, field });
     setEditValue(String(initialVal || ''));
@@ -97,16 +161,28 @@ export const GanttChart: React.FC<GanttChartProps> = ({
     setEditingCell(null);
   };
 
-  // Group activities by phase
-  const groupedPhases: { phase: string; items: Activity[] }[] = [];
-  activities.forEach((act) => {
-    let group = groupedPhases.find((g) => g.phase === act.phase);
-    if (!group) {
-      group = { phase: act.phase, items: [] };
-      groupedPhases.push(group);
-    }
-    group.items.push(act);
-  });
+  // ── PAGINATED DATA SLICE ──
+  const totalActivities = activities.length;
+  const isAll = pageSize === 0;
+  const paginatedActivities = useMemo(() => {
+    if (isAll) return activities;
+    const start = (currentPage - 1) * pageSize;
+    return activities.slice(start, start + pageSize);
+  }, [activities, currentPage, pageSize, isAll]);
+
+  // Group paginated activities by phase
+  const groupedPhases = useMemo(() => {
+    const groups: { phase: string; items: Activity[] }[] = [];
+    paginatedActivities.forEach((act) => {
+      let group = groups.find((g) => g.phase === act.phase);
+      if (!group) {
+        group = { phase: act.phase, items: [] };
+        groups.push(group);
+      }
+      group.items.push(act);
+    });
+    return groups;
+  }, [paginatedActivities]);
 
   const getStatusBadge = (status: ActivityStatus) => {
     switch (status) {
@@ -141,7 +217,92 @@ export const GanttChart: React.FC<GanttChartProps> = ({
 
   return (
     <div className="gantt-wrap">
-      <div className="gantt-scroll">
+      {/* ── TOP HORIZONTAL TIMELINE SLIDE CONTROLLER ── */}
+      <div className="timeline-slide-toolbar">
+        <div className="timeline-slide-left">
+          <div className="slide-badge">
+            <Sliders size={13} />
+            <span>Timeline Slide Navigator</span>
+          </div>
+
+          <div className="slide-btn-group">
+            <button
+              type="button"
+              className="slide-step-btn"
+              onClick={() => slideBy(-300)}
+              title="Slide View Left"
+            >
+              <ChevronLeft size={14} /> Slide Left
+            </button>
+
+            <button
+              type="button"
+              className="slide-step-btn"
+              onClick={() => slideBy(300)}
+              title="Slide View Right"
+            >
+              Slide Right <ChevronRight size={14} />
+            </button>
+          </div>
+
+          <div className="timeline-slider-track-wrap">
+            <span className="slider-end-label">Table</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={scrollPct}
+              onChange={handleSliderChange}
+              className="timeline-range-slider"
+              title={`Slide View Position (${scrollPct}%)`}
+            />
+            <span className="slider-end-label">Gantt</span>
+            <span className="slider-pct-pill">{scrollPct}%</span>
+          </div>
+        </div>
+
+        <div className="timeline-slide-right">
+          <button
+            type="button"
+            className={`preset-jump-btn ${scrollPct < 15 ? 'active' : ''}`}
+            onClick={() => jumpToView('details')}
+            title="Jump to Table Details (ID, Activity, Responsible)"
+          >
+            <List size={12} /> Details View
+          </button>
+          <button
+            type="button"
+            className="preset-jump-btn"
+            onClick={() => jumpToView('today')}
+            title="Jump to Today's Timeline Line"
+          >
+            <Calendar size={12} /> Jump to Today
+          </button>
+          <button
+            type="button"
+            className={`preset-jump-btn ${scrollPct > 45 ? 'active' : ''}`}
+            onClick={() => jumpToView('gantt')}
+            title="Jump to Gantt Timeline Bar Chart"
+          >
+            <MoveHorizontal size={12} /> Gantt Timeline
+          </button>
+          <button
+            type="button"
+            className="preset-jump-btn"
+            onClick={() => jumpToView('end')}
+            title="Scroll to End of Project"
+          >
+            Project End ⏭
+          </button>
+        </div>
+      </div>
+
+      {/* ── SCROLLABLE GANTT TABLE WITH FREEZE-PANES ── */}
+      <div 
+        className="gantt-scroll" 
+        ref={scrollContainerRef} 
+        onScroll={handleContainerScroll}
+      >
         <table className="gantt-table">
           <colgroup>
             <col style={{ width: '45px' }} />
@@ -157,8 +318,8 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           </colgroup>
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Activity</th>
+              <th className="sticky-col-id">ID</th>
+              <th className="sticky-col-act">Activity</th>
               <th>Responsible</th>
               <th>Start</th>
               <th>Deadline</th>
@@ -205,8 +366,8 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           <tbody>
             {groupedPhases.map((group) => (
               <React.Fragment key={group.phase}>
-                <tr className="phase-row">
-                  <td colSpan={10}>{group.phase}</td>
+                <tr className="phase-row phase-header-row">
+                  <td colSpan={10} className="sticky-col-id">{group.phase}</td>
                 </tr>
                 {group.items.map((act) => {
                   const status = computeStatus(act);
@@ -240,11 +401,11 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                       }}
                       onMouseLeave={() => setTooltip(null)}
                     >
-                      {/* ID */}
-                      <td className="id-col">{act.id}</td>
+                      {/* Frozen ID */}
+                      <td className="id-col sticky-col-id">{act.id}</td>
 
-                      {/* Name */}
-                      <td className="name-col">
+                      {/* Frozen Name */}
+                      <td className="name-col sticky-col-act">
                         {editingCell?.id === act.id && editingCell?.field === 'name' ? (
                           <input 
                             type="text" 
@@ -288,7 +449,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                         ) : (
                           <span 
                             className="editable"
-                            title="Click to inline edit vendor"
+                            title="Click to inline edit"
                             onClick={() => startEditing(act.id, 'resp', act.resp)}
                           >
                             {act.resp || '—'}
@@ -297,7 +458,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                       </td>
 
                       {/* Start Date */}
-                      <td className="dates-col">
+                      <td className="start-col">
                         {editingCell?.id === act.id && editingCell?.field === 'start' ? (
                           <input 
                             type="date" 
@@ -314,7 +475,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                         ) : (
                           <span 
                             className="editable"
-                            title="Click to change start date"
+                            title="Click to inline edit date"
                             onClick={() => startEditing(act.id, 'start', act.start)}
                           >
                             {fmtShort(act.start)}
@@ -323,7 +484,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                       </td>
 
                       {/* Deadline Date */}
-                      <td className="dates-col">
+                      <td className="end-col">
                         {editingCell?.id === act.id && editingCell?.field === 'end' ? (
                           <input 
                             type="date" 
@@ -340,7 +501,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                         ) : (
                           <span 
                             className="editable"
-                            title="Click to change deadline"
+                            title="Click to inline edit deadline"
                             onClick={() => startEditing(act.id, 'end', act.end)}
                           >
                             {fmtShort(act.end)}
@@ -348,78 +509,77 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                         )}
                       </td>
 
-                      {/* Duration */}
-                      <td className="dur-col">{dur}d</td>
-
-                      {/* % Done */}
-                      <td className="pct-col">
-                        <div className="pct-progress">
-                          <div className="pct-track">
-                            <div 
-                              className={`pct-fill ${barFillClass}`}
-                              style={{ width: `${act.pct}%` }}
-                            />
-                          </div>
-                          {editingCell?.id === act.id && editingCell?.field === 'pct' ? (
-                            <input 
-                              type="number" 
-                              min="0" 
-                              max="100" 
-                              className="editable-input" 
-                              style={{ width: '48px', padding: '1px 3px' }}
-                              value={editValue} 
-                              autoFocus
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onBlur={() => commitEdit(act.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') commitEdit(act.id);
-                                if (e.key === 'Escape') setEditingCell(null);
-                              }}
-                            />
-                          ) : (
-                            <span 
-                              className="pct-num editable"
-                              title="Click to edit percentage"
-                              onClick={() => startEditing(act.id, 'pct', act.pct)}
-                            >
-                              {act.pct}%
-                            </span>
-                          )}
-                        </div>
+                      {/* Duration Days */}
+                      <td className="days-col" style={{ textAlign: 'center' }}>
+                        {dur}d
                       </td>
 
-                      {/* Status */}
-                      <td className="status-col">{getStatusBadge(status)}</td>
+                      {/* % Done */}
+                      <td className="pct-col" style={{ textAlign: 'center' }}>
+                        {editingCell?.id === act.id && editingCell?.field === 'pct' ? (
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max="100"
+                            className="editable-input" 
+                            value={editValue} 
+                            autoFocus
+                            style={{ width: '55px', textAlign: 'center' }}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => commitEdit(act.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') commitEdit(act.id);
+                              if (e.key === 'Escape') setEditingCell(null);
+                            }}
+                          />
+                        ) : (
+                          <div 
+                            className="pct-bar-wrap editable"
+                            title="Click to inline edit percentage"
+                            onClick={() => startEditing(act.id, 'pct', act.pct)}
+                          >
+                            <div className="pct-track">
+                              <div className="pct-fill" style={{ width: `${act.pct}%` }} />
+                            </div>
+                            <span className="pct-text">{act.pct}%</span>
+                          </div>
+                        )}
+                      </td>
 
-                      {/* Action */}
-                      <td className="action-col">
+                      {/* Status Badge */}
+                      <td className="status-col">
+                        {getStatusBadge(status)}
+                      </td>
+
+                      {/* Edit Modal Action */}
+                      <td className="action-col" style={{ textAlign: 'center' }}>
                         <button 
-                          className="btn btn-outline btn-sm"
+                          className="btn btn-outline btn-sm btn-icon"
                           onClick={() => onEditActivityModal(act.id)}
-                          title="Full Edit Activity"
+                          title="Full Edit Details"
                         >
-                          <Edit2 size={11} />
+                          <Edit2 size={12} />
                         </button>
                       </td>
 
-                      {/* Gantt Timeline Bar */}
+                      {/* Gantt Bar Graphic */}
                       <td className="chart-col">
-                        <div className="bar-wrap">
-                          <span className="today-line" style={{ left: `${todayPct}%`, height: '100%', top: 0 }} />
+                        <div className="bar-track">
                           <div 
-                            className="bar-bg" 
-                            style={{ 
-                              left: `calc(${leftPct}% + 4px)`, 
-                              width: `calc(${widthPct}% - 8px)` 
-                            }} 
-                          />
-                          <div 
-                            className={`bar-fill ${barFillClass}`} 
-                            style={{ 
-                              left: `calc(${leftPct}% + 4px)`, 
-                              width: `calc(${fillPct}% - ${fillPct > 0 ? '8' : '0'}px)` 
-                            }} 
-                          />
+                            className={`gantt-bar ${barFillClass}`}
+                            style={{
+                              left: `${leftPct}%`,
+                              width: `${widthPct}%`,
+                            }}
+                          >
+                            <div 
+                              className="gantt-bar-fill"
+                              style={{ width: `${act.pct}%` }}
+                            />
+                            <span className="gantt-bar-label">
+                              {act.pct > 0 ? `${act.pct}%` : ''}
+                            </span>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -430,6 +590,17 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* ── ENTERPRISE PAGINATION BAR ── */}
+      <Pagination 
+        currentPage={currentPage}
+        totalItems={totalActivities}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        pageSizeOptions={[15, 25, 50, 0]}
+        itemLabel="activities"
+      />
 
       {/* Floating Tooltip */}
       {tooltip && (

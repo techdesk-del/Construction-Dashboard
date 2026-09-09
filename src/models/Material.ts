@@ -27,4 +27,7 @@ const MaterialSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+MaterialSchema.index({ mat: 1, work: 1 });
+MaterialSchema.index({ deadline: 1 });
+
 export default mongoose.models.Material || mongoose.model<IMaterialDocument>('Material', MaterialSchema);

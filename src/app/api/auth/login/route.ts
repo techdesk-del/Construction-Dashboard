@@ -2,10 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase, memoryStore } from '@/lib/db';
 import UserModel from '@/models/User';
 import { comparePassword, signToken, hashPassword } from '@/lib/auth';
+import { rateLimit, getClientIp, sanitizeInput } from '@/lib/security';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    // 1. Rate Limiting Protection (Max 10 login attempts per 5 minutes per IP)
+    const clientIp = getClientIp(req);
+    const rl = rateLimit(`login:${clientIp}`, 10, 5 * 60 * 1000);
+    if (!rl.success) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Too many login attempts. For security reasons, please wait 5 minutes before trying again.' 
+        },
+        { 
+          status: 429,
+          headers: { 'Retry-After': '300' }
+        }
+      );
+    }
+
+    const rawBody = await req.json();
+    const body = sanitizeInput(rawBody);
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json({ success: false, error: 'Email and password are required' }, { status: 400 });

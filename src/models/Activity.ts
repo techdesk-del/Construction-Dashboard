@@ -22,4 +22,7 @@ const ActivitySchema: Schema = new Schema(
   { timestamps: true }
 );
 
+ActivitySchema.index({ phase: 1, status: 1 });
+ActivitySchema.index({ start: 1, end: 1 });
+
 export default mongoose.models.Activity || mongoose.model<IActivityDocument>('Activity', ActivitySchema);

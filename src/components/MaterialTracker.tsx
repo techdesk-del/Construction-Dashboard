@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MaterialItem, MaterialDeliveryStatus, MaterialWorkStatus } from '@/types';
-import { Plus, Edit2, Trash2, PackageCheck, Filter, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, PackageCheck } from 'lucide-react';
+import { Pagination } from './Pagination';
 
 interface MaterialTrackerProps {
   materials: MaterialItem[];
@@ -19,6 +20,10 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  // ── PAGINATION STATE ──
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(12); // 12 cards per page default
 
   const getMatClass = (mat: MaterialDeliveryStatus) => {
     switch (mat) {
@@ -48,18 +53,29 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
     }
   };
 
-  const filteredMaterials = materials.filter((m) => {
-    if (filterStatus && m.mat !== filterStatus) return false;
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      return (
-        m.name.toLowerCase().includes(q) ||
-        m.resp.toLowerCase().includes(q) ||
-        (m.phase && m.phase.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  // Filtered materials
+  const filteredMaterials = useMemo(() => {
+    return materials.filter((m) => {
+      if (filterStatus && m.mat !== filterStatus) return false;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        return (
+          m.name.toLowerCase().includes(q) ||
+          m.resp.toLowerCase().includes(q) ||
+          (m.phase && m.phase.toLowerCase().includes(q))
+        );
+      }
+      return true;
+    });
+  }, [materials, filterStatus, searchTerm]);
+
+  // Paginated slice
+  const isAll = pageSize === 0;
+  const paginatedMaterials = useMemo(() => {
+    if (isAll) return filteredMaterials;
+    const start = (currentPage - 1) * pageSize;
+    return filteredMaterials.slice(start, start + pageSize);
+  }, [filteredMaterials, currentPage, pageSize, isAll]);
 
   return (
     <div style={{ marginTop: '20px' }}>
@@ -75,7 +91,10 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
           <select 
             className="select-input"
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={(e) => {
+              setFilterStatus(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="">All Delivery Statuses</option>
             <option value="Delivered">Delivered</option>
@@ -89,7 +108,10 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
             className="text-input"
             placeholder="Search materials or vendors..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             style={{ width: '200px' }}
           />
 
@@ -100,58 +122,85 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
       </div>
 
       <div className="mat-grid">
-        {filteredMaterials.map((m) => (
-          <div key={m.id} className="mat-card">
-            <div className="mat-name">
-              <span>{m.name}</span>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button 
-                  className="btn btn-outline btn-sm" 
-                  style={{ padding: '2px 5px', fontSize: '10px' }}
-                  onClick={() => onEditMaterial(m)}
-                  title="Edit Material"
-                >
-                  <Edit2 size={10} />
-                </button>
-                <button 
-                  className="btn btn-danger btn-sm" 
-                  style={{ padding: '2px 5px', fontSize: '10px' }}
-                  onClick={() => onDeleteMaterial(m.id)}
-                  title="Delete Material"
-                >
-                  <Trash2 size={10} />
-                </button>
-              </div>
-            </div>
-
-            <div className="mat-row">
-              <span>Material Status</span>
-              <span className={`mat-val ${getMatClass(m.mat)}`}>{m.mat}</span>
-            </div>
-
-            <div className="mat-row">
-              <span>Work Execution</span>
-              <span className={`mat-val ${getWorkClass(m.work)}`}>{m.work}</span>
-            </div>
-
-            <div className="mat-row">
-              <span>Responsible</span>
-              <span className="mat-val">{m.resp || '—'}</span>
-            </div>
-
-            <div className="mat-row">
-              <span>Procurement Deadline</span>
-              <span className="mat-val">{m.deadline}</span>
-            </div>
-
-            {m.phase && (
-              <div className="mat-row" style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed var(--border)' }}>
-                <span>Phase</span>
-                <span style={{ fontSize: '11px', color: 'var(--text-sub)' }}>{m.phase}</span>
-              </div>
-            )}
+        {paginatedMaterials.length === 0 ? (
+          <div style={{
+            gridColumn: '1 / -1',
+            padding: '36px 16px',
+            textAlign: 'center',
+            color: 'var(--text-sub)',
+            background: 'var(--surface)',
+            border: '1px dashed var(--border)',
+            borderRadius: 'var(--radius-lg)'
+          }}>
+            No procurement materials match the current filters.
           </div>
-        ))}
+        ) : (
+          paginatedMaterials.map((m) => (
+            <div key={m.id} className="mat-card">
+              <div className="mat-name">
+                <span>{m.name}</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    style={{ padding: '2px 5px', fontSize: '10px' }}
+                    onClick={() => onEditMaterial(m)}
+                    title="Edit Material"
+                  >
+                    <Edit2 size={10} />
+                  </button>
+                  <button 
+                    className="btn btn-danger btn-sm" 
+                    style={{ padding: '2px 5px', fontSize: '10px' }}
+                    onClick={() => onDeleteMaterial(m.id)}
+                    title="Delete Material"
+                  >
+                    <Trash2 size={10} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mat-row">
+                <span>Material Status</span>
+                <span className={`mat-val ${getMatClass(m.mat)}`}>{m.mat}</span>
+              </div>
+
+              <div className="mat-row">
+                <span>Work Execution</span>
+                <span className={`mat-val ${getWorkClass(m.work)}`}>{m.work}</span>
+              </div>
+
+              <div className="mat-row">
+                <span>Responsible</span>
+                <span className="mat-val">{m.resp || '—'}</span>
+              </div>
+
+              <div className="mat-row">
+                <span>Procurement Deadline</span>
+                <span className="mat-val">{m.deadline}</span>
+              </div>
+
+              {m.phase && (
+                <div className="mat-row" style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed var(--border)' }}>
+                  <span>Phase</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-sub)' }}>{m.phase}</span>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── ENTERPRISE PAGINATION FOR MATERIALS ── */}
+      <div style={{ marginTop: '16px' }}>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredMaterials.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={[6, 12, 24, 0]}
+          itemLabel="procurement items"
+        />
       </div>
     </div>
   );
