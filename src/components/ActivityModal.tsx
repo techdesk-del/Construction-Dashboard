@@ -21,7 +21,17 @@ interface ActivityModalProps {
   onClose: () => void;
   onSave: (data: Partial<Activity>) => void;
   onDelete?: (id: number) => void;
+  availablePhases?: string[];
 }
+
+const DEFAULT_PHASES = [
+  'Critical Civil & External',
+  'Swimming Pool',
+  'Services',
+  'Finishes',
+  'Openings',
+  'Interior',
+];
 
 export const ActivityModal: React.FC<ActivityModalProps> = ({
   isOpen,
@@ -29,6 +39,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   onClose,
   onSave,
   onDelete,
+  availablePhases = DEFAULT_PHASES,
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -43,8 +54,27 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     remarks: '',
   });
 
+  const [isCustomPhase, setIsCustomPhase] = useState<boolean>(false);
+  const [customPhaseText, setCustomPhaseText] = useState<string>('');
+
+  // Combined deduplicated phases list
+  const phaseOptions = React.useMemo(() => {
+    const set = new Set<string>(DEFAULT_PHASES);
+    if (availablePhases) {
+      availablePhases.forEach((p) => {
+        if (p && p.trim()) set.add(p.trim());
+      });
+    }
+    if (activity?.phase) {
+      set.add(activity.phase.trim());
+    }
+    return Array.from(set);
+  }, [availablePhases, activity]);
+
   useEffect(() => {
     if (activity) {
+      setIsCustomPhase(false);
+      setCustomPhaseText('');
       setFormData({
         name: activity.name,
         phase: activity.phase,
@@ -60,9 +90,12 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     } else {
       const todayStr = new Date().toISOString().slice(0, 10);
       const nextWeekStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const initialPhase = (availablePhases && availablePhases.length > 0 ? availablePhases[0] : 'Critical Civil & External') as PhaseName;
+      setIsCustomPhase(false);
+      setCustomPhaseText('');
       setFormData({
         name: '',
-        phase: 'Critical Civil & External',
+        phase: initialPhase,
         priority: 'Medium',
         start: todayStr,
         end: nextWeekStr,
@@ -73,17 +106,25 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
         remarks: '',
       });
     }
-  }, [activity, isOpen]);
+  }, [activity, isOpen, availablePhases]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const finalPhase = isCustomPhase ? customPhaseText.trim() : formData.phase?.trim();
     if (!formData.name.trim() || !formData.start || !formData.end) {
       alert('Activity name, start date, and deadline are required.');
       return;
     }
-    onSave(formData);
+    if (!finalPhase) {
+      alert('Please select or enter a valid Construction Phase title.');
+      return;
+    }
+    onSave({
+      ...formData,
+      phase: finalPhase as PhaseName,
+    });
   };
 
   return (
@@ -141,19 +182,110 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
 
             {/* Construction Phase */}
             <div className="form-group">
-              <label htmlFor="modal-act-phase">Construction Phase *</label>
-              <select 
-                id="modal-act-phase"
-                value={formData.phase}
-                onChange={(e) => setFormData({ ...formData, phase: e.target.value as PhaseName })}
-              >
-                <option value="Critical Civil & External">Critical Civil &amp; External</option>
-                <option value="Swimming Pool">Swimming Pool</option>
-                <option value="Services">Services (Plumbing &amp; Electrical)</option>
-                <option value="Finishes">Finishes (Ceiling, Tiling, Paint)</option>
-                <option value="Openings">Openings (Doors, Windows, Stairs)</option>
-                <option value="Interior">Interior (Furniture, ELV)</option>
-              </select>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                <label htmlFor="modal-act-phase" style={{ margin: 0, fontWeight: 600 }}>
+                  Construction Phase *
+                </label>
+                {!isCustomPhase ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomPhase(true);
+                      setCustomPhaseText('');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--blue)',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '0 2px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    + Add Custom Title
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomPhase(false);
+                      setCustomPhaseText('');
+                      setFormData({ ...formData, phase: (phaseOptions[0] || 'Critical Civil & External') as PhaseName });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-sub)',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      padding: '0 2px',
+                    }}
+                  >
+                    ← Select from list
+                  </button>
+                )}
+              </div>
+
+              {!isCustomPhase ? (
+                <select 
+                  id="modal-act-phase"
+                  value={formData.phase}
+                  onChange={(e) => {
+                    if (e.target.value === '__add_new_custom_phase__') {
+                      setIsCustomPhase(true);
+                      setCustomPhaseText('');
+                    } else {
+                      setFormData({ ...formData, phase: e.target.value as PhaseName });
+                    }
+                  }}
+                >
+                  {phaseOptions.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                  <option 
+                    value="__add_new_custom_phase__" 
+                    style={{ fontWeight: 700, color: 'var(--blue)' }}
+                  >
+                    ➕ + Add New Custom Phase...
+                  </option>
+                </select>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    id="modal-act-custom-phase"
+                    type="text"
+                    placeholder="Enter custom phase title (e.g. Landscaping, HVAC)..."
+                    value={customPhaseText}
+                    onChange={(e) => {
+                      setCustomPhaseText(e.target.value);
+                      setFormData({ ...formData, phase: e.target.value as PhaseName });
+                    }}
+                    style={{
+                      borderColor: 'var(--blue)',
+                      background: '#f8faff',
+                      boxShadow: '0 0 0 3px rgba(37, 99, 235, 0.1)',
+                      flex: 1,
+                    }}
+                    autoFocus
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ height: '38px', padding: '0 10px', fontSize: '11.5px' }}
+                    onClick={() => {
+                      setIsCustomPhase(false);
+                      setCustomPhaseText('');
+                      setFormData({ ...formData, phase: (phaseOptions[0] || 'Critical Civil & External') as PhaseName });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Priority */}

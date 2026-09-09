@@ -8,7 +8,8 @@ export type PhaseName =
   | 'Services'
   | 'Finishes'
   | 'Openings'
-  | 'Interior';
+  | 'Interior'
+  | (string & {});
 
 export interface Activity {
   id: number;

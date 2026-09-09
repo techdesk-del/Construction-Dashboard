@@ -36,6 +36,57 @@ function DashboardContent() {
   const [selectedPhase, setSelectedPhase] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  // Dynamic Custom Construction Phases
+  const [customPhases, setCustomPhases] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('construction_custom_phases');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [];
+  });
+
+  const registerPhase = (newPhase?: string) => {
+    const trimmed = newPhase?.trim();
+    if (!trimmed) return;
+    const defaultList = [
+      'Critical Civil & External',
+      'Swimming Pool',
+      'Services',
+      'Finishes',
+      'Openings',
+      'Interior',
+    ];
+    if (!defaultList.includes(trimmed)) {
+      setCustomPhases((prev) => {
+        if (!prev.includes(trimmed)) {
+          const next = [...prev, trimmed];
+          try {
+            localStorage.setItem('construction_custom_phases', JSON.stringify(next));
+          } catch (e) {}
+          return next;
+        }
+        return prev;
+      });
+    }
+  };
+
+  const allPhases = useMemo(() => {
+    const defaultList = [
+      'Critical Civil & External',
+      'Swimming Pool',
+      'Services',
+      'Finishes',
+      'Openings',
+      'Interior',
+    ];
+    const set = new Set<string>(defaultList);
+    customPhases.forEach((p) => { if (p && p.trim()) set.add(p.trim()); });
+    activities.forEach((a) => { if (a.phase && a.phase.trim()) set.add(a.phase.trim()); });
+    materials.forEach((m) => { if (m.phase && m.phase.trim()) set.add(m.phase.trim()); });
+    return Array.from(set);
+  }, [activities, materials, customPhases]);
 
   // Modals
   const [activityModalOpen, setActivityModalOpen] = useState<boolean>(false);
@@ -127,6 +178,7 @@ function DashboardContent() {
   };
 
   const handleSaveActivityModal = async (formData: Partial<Activity>) => {
+    if (formData.phase) registerPhase(formData.phase);
     if (editingActivity) {
       // Edit
       await handleUpdateActivity(editingActivity.id, formData);
@@ -185,6 +237,7 @@ function DashboardContent() {
 
   // Material Handlers
   const handleSaveMaterial = async (formData: Partial<MaterialItem>) => {
+    if (formData.phase) registerPhase(formData.phase);
     if (editingMaterial) {
       setMaterials((prev) =>
         prev.map((m) => (m.id === editingMaterial.id ? { ...m, ...formData } : m))
@@ -318,14 +371,7 @@ function DashboardContent() {
     );
   }
 
-  const phases = [
-    'Critical Civil & External',
-    'Swimming Pool',
-    'Services',
-    'Finishes',
-    'Openings',
-    'Interior',
-  ];
+  const phases = allPhases;
 
   return (
     <div className="crm-app-shell">
@@ -385,7 +431,7 @@ function DashboardContent() {
                 onChange={(e) => setSelectedPhase(e.target.value)}
                 style={{ fontSize: '12px', height: '36px', background: '#fff' }}
               >
-                <option value="">All Construction Phases</option>
+                <option value="">All Construction Phases ({allPhases.length})</option>
                 {phases.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
@@ -441,6 +487,7 @@ function DashboardContent() {
           {viewMode === 'materials' && (
             <MaterialTracker 
               materials={materials}
+              availablePhases={allPhases}
               onAddMaterial={() => {
                 setEditingMaterial(null);
                 setMaterialModalOpen(true);
@@ -472,6 +519,7 @@ function DashboardContent() {
       <ActivityModal 
         isOpen={activityModalOpen}
         activity={editingActivity}
+        availablePhases={allPhases}
         onClose={() => {
           setActivityModalOpen(false);
           setEditingActivity(null);
@@ -484,6 +532,7 @@ function DashboardContent() {
       <MaterialModal 
         isOpen={materialModalOpen}
         material={editingMaterial}
+        availablePhases={allPhases}
         onClose={() => {
           setMaterialModalOpen(false);
           setEditingMaterial(null);

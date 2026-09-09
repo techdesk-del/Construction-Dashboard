@@ -18,7 +18,17 @@ interface MaterialModalProps {
   onClose: () => void;
   onSave: (data: Partial<MaterialItem>) => void;
   onDelete?: (id: number) => void;
+  availablePhases?: string[];
 }
+
+const DEFAULT_PHASES = [
+  'Critical Civil & External',
+  'Swimming Pool',
+  'Services',
+  'Finishes',
+  'Openings',
+  'Interior',
+];
 
 export const MaterialModal: React.FC<MaterialModalProps> = ({
   isOpen,
@@ -26,6 +36,7 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
   onClose,
   onSave,
   onDelete,
+  availablePhases = DEFAULT_PHASES,
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -37,8 +48,26 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
     notes: '',
   });
 
+  const [isCustomPhase, setIsCustomPhase] = useState<boolean>(false);
+  const [customPhaseText, setCustomPhaseText] = useState<string>('');
+
+  const phaseOptions = React.useMemo(() => {
+    const set = new Set<string>(DEFAULT_PHASES);
+    if (availablePhases) {
+      availablePhases.forEach((p) => {
+        if (p && p.trim()) set.add(p.trim());
+      });
+    }
+    if (material?.phase) {
+      set.add(material.phase.trim());
+    }
+    return Array.from(set);
+  }, [availablePhases, material]);
+
   useEffect(() => {
     if (material) {
+      setIsCustomPhase(false);
+      setCustomPhaseText('');
       setFormData({
         name: material.name,
         mat: material.mat,
@@ -49,27 +78,34 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
         notes: material.notes || '',
       });
     } else {
+      const initialPhase = (availablePhases && availablePhases.length > 0 ? availablePhases[0] : 'Critical Civil & External') as PhaseName;
+      setIsCustomPhase(false);
+      setCustomPhaseText('');
       setFormData({
         name: '',
         mat: 'To be Delivered',
         work: 'Pending',
         resp: '',
         deadline: '15 Sep 2026',
-        phase: 'Critical Civil & External',
+        phase: initialPhase,
         notes: '',
       });
     }
-  }, [material, isOpen]);
+  }, [material, isOpen, availablePhases]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const finalPhase = isCustomPhase ? customPhaseText.trim() : formData.phase?.trim();
     if (!formData.name.trim() || !formData.deadline.trim()) {
       alert('Material name and procurement deadline are required.');
       return;
     }
-    onSave(formData);
+    onSave({
+      ...formData,
+      phase: (finalPhase || 'Critical Civil & External') as PhaseName,
+    });
   };
 
   return (
@@ -181,20 +217,112 @@ export const MaterialModal: React.FC<MaterialModalProps> = ({
             </div>
 
             {/* Phase */}
+            {/* Phase */}
             <div className="form-group col-full">
-              <label htmlFor="modal-mat-phase">Associated Construction Phase</label>
-              <select 
-                id="modal-mat-phase"
-                value={formData.phase}
-                onChange={(e) => setFormData({ ...formData, phase: e.target.value as PhaseName })}
-              >
-                <option value="Critical Civil & External">Critical Civil &amp; External</option>
-                <option value="Swimming Pool">Swimming Pool</option>
-                <option value="Services">Services (Plumbing &amp; Electrical)</option>
-                <option value="Finishes">Finishes (Ceiling, Tiling, Paint)</option>
-                <option value="Openings">Openings (Doors, Windows, Stairs)</option>
-                <option value="Interior">Interior (Furniture, ELV)</option>
-              </select>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                <label htmlFor="modal-mat-phase" style={{ margin: 0, fontWeight: 600 }}>
+                  Associated Construction Phase
+                </label>
+                {!isCustomPhase ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomPhase(true);
+                      setCustomPhaseText('');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--blue)',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '0 2px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    + Add Custom Title
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomPhase(false);
+                      setCustomPhaseText('');
+                      setFormData({ ...formData, phase: (phaseOptions[0] || 'Critical Civil & External') as PhaseName });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-sub)',
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      padding: '0 2px',
+                    }}
+                  >
+                    ← Select from list
+                  </button>
+                )}
+              </div>
+
+              {!isCustomPhase ? (
+                <select 
+                  id="modal-mat-phase"
+                  value={formData.phase}
+                  onChange={(e) => {
+                    if (e.target.value === '__add_new_custom_phase__') {
+                      setIsCustomPhase(true);
+                      setCustomPhaseText('');
+                    } else {
+                      setFormData({ ...formData, phase: e.target.value as PhaseName });
+                    }
+                  }}
+                >
+                  {phaseOptions.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                  <option 
+                    value="__add_new_custom_phase__" 
+                    style={{ fontWeight: 700, color: 'var(--blue)' }}
+                  >
+                    ➕ + Add New Custom Phase...
+                  </option>
+                </select>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    id="modal-mat-custom-phase"
+                    type="text"
+                    placeholder="Enter custom phase title (e.g. Landscaping, HVAC)..."
+                    value={customPhaseText}
+                    onChange={(e) => {
+                      setCustomPhaseText(e.target.value);
+                      setFormData({ ...formData, phase: e.target.value as PhaseName });
+                    }}
+                    style={{
+                      borderColor: 'var(--blue)',
+                      background: '#f8faff',
+                      boxShadow: '0 0 0 3px rgba(37, 99, 235, 0.1)',
+                      flex: 1,
+                    }}
+                    autoFocus
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ height: '38px', padding: '0 10px', fontSize: '11.5px' }}
+                    onClick={() => {
+                      setIsCustomPhase(false);
+                      setCustomPhaseText('');
+                      setFormData({ ...formData, phase: (phaseOptions[0] || 'Critical Civil & External') as PhaseName });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

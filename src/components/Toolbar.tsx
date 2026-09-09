@@ -22,6 +22,7 @@ interface ToolbarProps {
   onStatusChange: (status: string) => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  availablePhases?: string[];
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -33,7 +34,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onStatusChange,
   searchQuery,
   onSearchChange,
+  availablePhases,
 }) => {
+  const defaultPhases = [
+    'Critical Civil & External',
+    'Swimming Pool',
+    'Services',
+    'Finishes',
+    'Openings',
+    'Interior',
+  ];
+  const phases = availablePhases && availablePhases.length > 0 ? availablePhases : defaultPhases;
   return (
     <div className="toolbar-container">
       <div className="toolbar-left">
@@ -71,13 +82,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           value={selectedPhase} 
           onChange={(e) => onPhaseChange(e.target.value)}
         >
-          <option value="">All Phases</option>
-          <option value="Critical Civil & External">Civil &amp; External</option>
-          <option value="Swimming Pool">Swimming Pool</option>
-          <option value="Services">Services</option>
-          <option value="Finishes">Finishes</option>
-          <option value="Openings">Openings</option>
-          <option value="Interior">Interior</option>
+          <option value="">All Phases ({phases.length})</option>
+          {phases.map((p) => (
+            <option key={p} value={p}>{p}</option>
+          ))}
         </select>
 
         {/* Status Filter */}

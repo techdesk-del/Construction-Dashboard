@@ -24,6 +24,7 @@ interface MaterialTrackerProps {
   onAddMaterial: () => void;
   onEditMaterial: (mat: MaterialItem) => void;
   onDeleteMaterial: (id: number) => void;
+  availablePhases?: string[];
 }
 
 export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
@@ -31,6 +32,7 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
   onAddMaterial,
   onEditMaterial,
   onDeleteMaterial,
+  availablePhases,
 }) => {
   const [filterPhase, setFilterPhase] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -103,14 +105,26 @@ export const MaterialTracker: React.FC<MaterialTrackerProps> = ({
     return filteredMaterials.slice(start, start + pageSize);
   }, [filteredMaterials, currentPage, pageSize, isAll]);
 
-  const phases: PhaseName[] = [
-    'Critical Civil & External',
-    'Swimming Pool',
-    'Services',
-    'Finishes',
-    'Openings',
-    'Interior',
-  ];
+  const phases = useMemo(() => {
+    const defaultList = [
+      'Critical Civil & External',
+      'Swimming Pool',
+      'Services',
+      'Finishes',
+      'Openings',
+      'Interior',
+    ];
+    const set = new Set<string>(defaultList);
+    if (availablePhases) {
+      availablePhases.forEach((p) => {
+        if (p && p.trim()) set.add(p.trim());
+      });
+    }
+    materials.forEach((m) => {
+      if (m.phase && m.phase.trim()) set.add(m.phase.trim());
+    });
+    return Array.from(set);
+  }, [availablePhases, materials]);
 
   return (
     <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
