@@ -90,14 +90,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       <header className="auth-topbar">
         <div className="auth-brand">
           <img 
-            src="/favicon.jpg" 
+            src="/logo.jpg" 
             alt="UrbanGaon" 
             style={{
               height: '36px',
-              width: '36px',
-              objectFit: 'cover',
-              borderRadius: '50%',
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+              width: 'auto',
+              objectFit: 'contain',
+              borderRadius: 'var(--radius-xs)',
             }} 
           />
           <div style={{ height: '26px', width: '1px', background: 'var(--border)', margin: '0 4px' }} />

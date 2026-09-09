@@ -40,14 +40,13 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="executive-topbar">
       <div className="topbar-left">
         <img 
-          src="/favicon.jpg" 
+          src="/logo.jpg" 
           alt="UrbanGaon" 
           style={{
             height: '38px',
-            width: '38px',
-            objectFit: 'cover',
-            borderRadius: '50%',
-            boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
+            width: 'auto',
+            objectFit: 'contain',
+            borderRadius: 'var(--radius-xs)',
           }} 
         />
         <div style={{ height: '30px', width: '1px', background: 'var(--border)', margin: '0 4px' }} />
