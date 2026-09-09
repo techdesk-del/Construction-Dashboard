@@ -18,7 +18,11 @@ import {
   Sliders, 
   Calendar, 
   List, 
-  MoveHorizontal 
+  MoveHorizontal,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown
 } from 'lucide-react';
 import { Pagination } from './Pagination';
 
@@ -26,6 +30,7 @@ interface GanttChartProps {
   activities: Activity[];
   onUpdateActivity: (id: number, updates: Partial<Activity>) => void;
   onEditActivityModal: (id: number) => void;
+  onReorderActivities?: (newActivities: Activity[]) => void;
 }
 
 interface TooltipData {
@@ -39,11 +44,138 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   activities,
   onUpdateActivity,
   onEditActivityModal,
+  onReorderActivities,
 }) => {
   // Inline editing state: { id, field }
   const [editingCell, setEditingCell] = useState<{ id: number; field: 'name' | 'resp' | 'start' | 'end' | 'pct' } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+
+  // ── ROW DRAG & SLIDE REORDERING STATE ──
+  const [draggedActId, setDraggedActId] = useState<number | null>(null);
+  const [dragOverActId, setDragOverActId] = useState<number | null>(null);
+  const [dropPosition, setDropPosition] = useState<'above' | 'below'>('above');
+  const [justMovedId, setJustMovedId] = useState<number | null>(null);
+  const [quickJumpId, setQuickJumpId] = useState<number | null>(null);
+  const [quickJumpPos, setQuickJumpPos] = useState<string>('');
+
+  const executeReorder = (sourceId: number, targetId: number, position: 'above' | 'below') => {
+    if (sourceId === targetId) return;
+
+    const sourceIndex = activities.findIndex((a) => a.id === sourceId);
+    const targetIndex = activities.findIndex((a) => a.id === targetId);
+    if (sourceIndex === -1 || targetIndex === -1) return;
+
+    const sourceAct = activities[sourceIndex];
+    const targetAct = activities[targetIndex];
+
+    const copy = [...activities];
+    copy.splice(sourceIndex, 1);
+
+    const newTargetIndex = copy.findIndex((a) => a.id === targetId);
+    const insertIndex = position === 'above' ? newTargetIndex : newTargetIndex + 1;
+
+    // Adopt target phase if dragged across phases
+    const updatedSource = { ...sourceAct, phase: targetAct.phase };
+    copy.splice(insertIndex, 0, updatedSource);
+
+    // Resequence IDs so that moving an activity to position 2 assigns it ID #2
+    const resequenced = copy.map((act, idx) => ({
+      ...act,
+      id: idx + 1,
+    }));
+
+    setJustMovedId(insertIndex + 1);
+    setTimeout(() => setJustMovedId(null), 2500);
+
+    if (onReorderActivities) {
+      onReorderActivities(resequenced);
+    }
+  };
+
+  const handleSlideRow = (id: number, direction: 'up' | 'down') => {
+    const idx = activities.findIndex((a) => a.id === id);
+    if (idx === -1) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === activities.length - 1) return;
+
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    const targetAct = activities[targetIdx];
+    executeReorder(id, targetAct.id, direction === 'up' ? 'above' : 'below');
+  };
+
+  const handleSlideToPosition = (id: number, targetPosStr: string) => {
+    const targetNum = parseInt(targetPosStr, 10);
+    if (isNaN(targetNum) || targetNum < 1 || targetNum > activities.length) {
+      alert(`Please enter a valid position between 1 and ${activities.length}`);
+      return;
+    }
+
+    const sourceIndex = activities.findIndex((a) => a.id === id);
+    if (sourceIndex === -1) return;
+
+    const targetIndex = targetNum - 1;
+    if (sourceIndex === targetIndex) {
+      setQuickJumpId(null);
+      return;
+    }
+
+    const copy = [...activities];
+    const [sourceAct] = copy.splice(sourceIndex, 1);
+    const targetAct = copy[Math.min(targetIndex, copy.length - 1)] || copy[copy.length - 1];
+
+    const updatedSource = { ...sourceAct, phase: targetAct ? targetAct.phase : sourceAct.phase };
+    copy.splice(targetIndex, 0, updatedSource);
+
+    const resequenced = copy.map((act, idx) => ({
+      ...act,
+      id: idx + 1,
+    }));
+
+    setJustMovedId(targetNum);
+    setTimeout(() => setJustMovedId(null), 2500);
+    setQuickJumpId(null);
+
+    if (onReorderActivities) {
+      onReorderActivities(resequenced);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, id: number) => {
+    setDraggedActId(id);
+    e.dataTransfer.setData('text/plain', String(id));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: number) => {
+    e.preventDefault();
+    if (draggedActId === id) return;
+    e.dataTransfer.dropEffect = 'move';
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midPoint = rect.top + rect.height / 2;
+    const pos = e.clientY < midPoint ? 'above' : 'below';
+
+    setDragOverActId(id);
+    setDropPosition(pos);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverActId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (!draggedActId || draggedActId === targetId) {
+      setDraggedActId(null);
+      setDragOverActId(null);
+      return;
+    }
+
+    executeReorder(draggedActId, targetId, dropPosition);
+    setDraggedActId(null);
+    setDragOverActId(null);
+  };
 
   // ── HORIZONTAL SLIDE & SCROLL CONTROLLER STATE ──
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -225,7 +357,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
       >
         <table className="gantt-table">
           <colgroup>
-            <col style={{ width: '45px' }} />
+            <col style={{ width: '72px' }} />
             <col style={{ width: '210px' }} />
             <col style={{ width: '135px' }} />
             <col style={{ width: '105px' }} />
@@ -238,7 +370,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           </colgroup>
           <thead>
             <tr>
-              <th className="sticky-col-id">ID</th>
+              <th className="sticky-col-id" title="Drag row or click number to slide reorder"># Order</th>
               <th className="sticky-col-act">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                   <span>Activity</span>
@@ -327,24 +459,102 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                   return (
                     <tr 
                       key={act.id} 
-                      className="task-row"
+                      className={`task-row ${draggedActId === act.id ? 'is-dragging' : ''} ${
+                        dragOverActId === act.id ? (dropPosition === 'above' ? 'drag-over-above' : 'drag-over-below') : ''
+                      } ${justMovedId === act.id ? 'row-just-slid' : ''}`}
+                      draggable={true}
+                      onDragStart={(e) => handleDragStart(e, act.id)}
+                      onDragOver={(e) => handleDragOver(e, act.id)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, act.id)}
                       onMouseEnter={(e) => {
-                        setTooltip({
-                          activity: act,
-                          status,
-                          x: e.clientX + 16,
-                          y: e.clientY - 12,
-                        });
+                        if (!draggedActId) {
+                          setTooltip({
+                            activity: act,
+                            status,
+                            x: e.clientX + 16,
+                            y: e.clientY - 12,
+                          });
+                        }
                       }}
                       onMouseMove={(e) => {
-                        if (tooltip) {
+                        if (tooltip && !draggedActId) {
                           setTooltip((prev) => prev ? { ...prev, x: e.clientX + 16, y: e.clientY - 12 } : null);
                         }
                       }}
                       onMouseLeave={() => setTooltip(null)}
                     >
-                      {/* Frozen ID */}
-                      <td className="id-col sticky-col-id">{act.id}</td>
+                      {/* Frozen ID Column with Drag & Slide Controls */}
+                      <td 
+                        className="id-col sticky-col-id"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="row-slide-control-cell">
+                          <div 
+                            className="row-grip-handle" 
+                            title="Click & drag row to slide (e.g. move to 1 or 2)"
+                          >
+                            <GripVertical size={13} />
+                          </div>
+
+                          {quickJumpId === act.id ? (
+                            <form 
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSlideToPosition(act.id, quickJumpPos);
+                              }}
+                              className="quick-jump-form"
+                            >
+                              <input 
+                                type="number" 
+                                min={1} 
+                                max={activities.length}
+                                value={quickJumpPos}
+                                onChange={(e) => setQuickJumpPos(e.target.value)}
+                                autoFocus
+                                className="quick-jump-input"
+                                onBlur={() => setQuickJumpId(null)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Escape') setQuickJumpId(null);
+                                }}
+                              />
+                            </form>
+                          ) : (
+                            <span 
+                              className="row-number-badge"
+                              title="Click to jump to custom position (e.g. 1 or 2)"
+                              onClick={() => {
+                                setQuickJumpId(act.id);
+                                setQuickJumpPos(String(act.id));
+                              }}
+                            >
+                              {act.id}
+                            </span>
+                          )}
+
+                          {/* Micro slide up/down arrows */}
+                          <div className="row-micro-slide-arrows">
+                            <button
+                              type="button"
+                              className="micro-arrow-btn"
+                              title="Slide Up (1 level)"
+                              onClick={() => handleSlideRow(act.id, 'up')}
+                              disabled={act.id === 1}
+                            >
+                              <ChevronUp size={10} />
+                            </button>
+                            <button
+                              type="button"
+                              className="micro-arrow-btn"
+                              title="Slide Down (1 level)"
+                              onClick={() => handleSlideRow(act.id, 'down')}
+                              disabled={act.id === activities.length}
+                            >
+                              <ChevronDown size={10} />
+                            </button>
+                          </div>
+                        </div>
+                      </td>
 
                       {/* Frozen Name */}
                       <td className="name-col sticky-col-act">

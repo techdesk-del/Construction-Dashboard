@@ -117,7 +117,23 @@ function DashboardContent() {
         ]);
 
         if (actRes.success && Array.isArray(actRes.data) && actRes.data.length > 0) {
-          setActivities(actRes.data);
+          let loaded = actRes.data;
+          try {
+            const savedOrderStr = localStorage.getItem('construction_activities_custom_order');
+            if (savedOrderStr) {
+              const savedList: Activity[] = JSON.parse(savedOrderStr);
+              if (Array.isArray(savedList) && savedList.length > 0) {
+                const orderMap = new Map<string, number>();
+                savedList.forEach((s, idx) => orderMap.set(s.name.trim().toLowerCase(), idx));
+                loaded = [...loaded].sort((a, b) => {
+                  const idxA = orderMap.has(a.name.trim().toLowerCase()) ? orderMap.get(a.name.trim().toLowerCase())! : a.id;
+                  const idxB = orderMap.has(b.name.trim().toLowerCase()) ? orderMap.get(b.name.trim().toLowerCase())! : b.id;
+                  return idxA - idxB;
+                }).map((a, idx) => ({ ...a, id: idx + 1 }));
+              }
+            }
+          } catch (e) {}
+          setActivities(loaded);
         }
         if (matRes.success && Array.isArray(matRes.data) && matRes.data.length > 0) {
           setMaterials(matRes.data);
@@ -232,6 +248,25 @@ function DashboardContent() {
       await fetch(`/api/activities?id=${id}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Failed to delete activity:', err);
+    }
+  };
+
+  const handleReorderActivities = async (newActivities: Activity[]) => {
+    setActivities(newActivities);
+    try {
+      localStorage.setItem('construction_activities_custom_order', JSON.stringify(newActivities));
+    } catch (e) {}
+
+    showToast('Activity schedule order updated');
+
+    try {
+      await fetch('/api/activities/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activities: newActivities }),
+      });
+    } catch (err) {
+      console.warn('Could not sync reorder to server:', err);
     }
   };
 
@@ -467,6 +502,7 @@ function DashboardContent() {
                   setActivityModalOpen(true);
                 }
               }}
+              onReorderActivities={handleReorderActivities}
             />
           )}
 
