@@ -216,30 +216,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   };
 
   return (
-    <div className="gantt-wrap" style={{ position: 'relative' }}>
-      {/* ── ROW 5 (MS FABRICATION ROOF) DOCKED SLIDE ARROWS ── */}
-      <div 
-        className="table-mid-row-arrow-dock"
-        title="Slide Table View Left / Right"
-      >
-        <button
-          type="button"
-          className="col-dock-arrow-btn"
-          onClick={() => slideBy(-450)}
-          title="Slide Left"
-        >
-          <ChevronLeft size={14} />
-        </button>
-        <button
-          type="button"
-          className="col-dock-arrow-btn"
-          onClick={() => slideBy(450)}
-          title="Slide Right"
-        >
-          <ChevronRight size={14} />
-        </button>
-      </div>
-
+    <div className="gantt-wrap">
       {/* ── SCROLLABLE GANTT TABLE WITH FREEZE-PANES ── */}
       <div 
         className="gantt-scroll" 
@@ -249,7 +226,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
         <table className="gantt-table">
           <colgroup>
             <col style={{ width: '45px' }} />
-            <col style={{ width: '200px' }} />
+            <col style={{ width: '210px' }} />
             <col style={{ width: '135px' }} />
             <col style={{ width: '105px' }} />
             <col style={{ width: '105px' }} />
@@ -262,7 +239,29 @@ export const GanttChart: React.FC<GanttChartProps> = ({
           <thead>
             <tr>
               <th className="sticky-col-id">ID</th>
-              <th className="sticky-col-act">Activity</th>
+              <th className="sticky-col-act">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span>Activity</span>
+                  <div className="activity-slide-arrows" title="Slide Table / Timeline View">
+                    <button
+                      type="button"
+                      className="col-slide-arrow-btn"
+                      onClick={() => slideBy(-450)}
+                      title="Slide Left"
+                    >
+                      <ChevronLeft size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      className="col-slide-arrow-btn"
+                      onClick={() => slideBy(450)}
+                      title="Slide Right"
+                    >
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
+                </div>
+              </th>
               <th>Responsible</th>
               <th>Start</th>
               <th>Deadline</th>
