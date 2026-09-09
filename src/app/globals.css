@@ -292,6 +292,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1 0 auto;
 }
 
 /* ── EXECUTIVE KPI METRIC DECK (SAAS TIER) ── */

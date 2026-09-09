@@ -421,7 +421,7 @@ function DashboardContent() {
 
         {/* Executive Minimal Footer */}
         <footer style={{
-          marginTop: '20px',
+          marginTop: 'auto',
           paddingTop: '16px',
           borderTop: '1px solid var(--border)',
           display: 'flex',
