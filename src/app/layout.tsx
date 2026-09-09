@@ -7,7 +7,8 @@ export const metadata: Metadata = {
   title: 'UrbanGaon — Chakramsar Farmhouse Master Schedule & ERP',
   description: 'Executive-grade interactive Gantt schedule, material procurement matrix, and contractor tracking for Chakramsar Farmhouse by UrbanGaon.',
   icons: {
-    icon: '/logo.jpg',
+    icon: '/favicon.jpg',
+    apple: '/favicon.jpg',
   },
 };
 
@@ -27,6 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+        <link rel="apple-touch-icon" href="/favicon.jpg" />
         {embeddedCss && (
           <style
             id="executive-design-system"
