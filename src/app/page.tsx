@@ -418,6 +418,21 @@ function DashboardContent() {
             materials={materials}
           />
         )}
+
+        {/* Executive Minimal Footer */}
+        <footer style={{
+          marginTop: '20px',
+          paddingTop: '16px',
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '11.5px',
+          color: 'var(--text-muted)',
+        }}>
+          <span>© 2026 Chakramsar Farmhouse • Master Capital Project Schedule</span>
+          <span>⚡ Synchronized with Live MongoDB Atlas Cluster</span>
+        </footer>
       </main>
 
       {/* Activity Add/Edit Modal */}
