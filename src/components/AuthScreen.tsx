@@ -106,10 +106,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </div>
         </div>
 
-        <div className="auth-mongo-badge">
-          <span className="mongo-pulse-dot" />
-          <Database size={13} />
-          <span>MongoDB Atlas Live</span>
+        <div className="auth-mongo-badge" style={{ borderColor: 'var(--border-strong)', color: 'var(--text-muted)' }}>
+          <span>Enterprise Access</span>
         </div>
       </header>
 
@@ -277,7 +275,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               disabled={submitting}
             >
               {submitting ? (
-                <span>Authenticating with MongoDB...</span>
+                <span>Verifying credentials...</span>
               ) : isSignup ? (
                 <>Create Executive Account <ArrowRight size={15} /></>
               ) : (
@@ -317,7 +315,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {/* Footer */}
       <footer className="auth-footer">
         <span>© 2026 Chakramsar Farmhouse Project • Enterprise Construction Management Suite</span>
-        <span>Secured with JWT &amp; Live MongoDB Atlas</span>
+        <span>Secured Enterprise Session &amp; Real-Time Cloud Sync</span>
       </footer>
     </div>
   );

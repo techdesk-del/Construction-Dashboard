@@ -431,7 +431,7 @@ function DashboardContent() {
           color: 'var(--text-muted)',
         }}>
           <span>© 2026 Chakramsar Farmhouse • Master Capital Project Schedule</span>
-          <span>⚡ Synchronized with Live MongoDB Atlas Cluster</span>
+          <span>⚡ Real-Time Project Sync Active</span>
         </footer>
       </main>
 

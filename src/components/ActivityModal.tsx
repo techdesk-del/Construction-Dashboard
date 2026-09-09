@@ -278,7 +278,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 className="btn btn-danger btn-sm"
                 style={{ marginRight: 'auto' }}
                 onClick={() => {
-                  if (confirm(`Delete "${activity.name}"? This will permanently remove it from MongoDB.`)) {
+                  if (confirm(`Delete "${activity.name}"? This will permanently remove this activity from the schedule.`)) {
                     onDelete(activity.id);
                   }
                 }}

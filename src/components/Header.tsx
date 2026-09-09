@@ -61,13 +61,6 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="topbar-right">
-        {/* Live MongoDB Status Pill */}
-        <div className="mongo-status-chip">
-          <span className="mongo-status-pulse" />
-          <Database size={12} />
-          <span>MongoDB Live</span>
-        </div>
-
         {/* User Profile Pill */}
         {user ? (
           <div className="user-profile-badge">

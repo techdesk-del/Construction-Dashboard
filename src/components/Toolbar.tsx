@@ -49,7 +49,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             className={`view-tab-btn ${viewMode === 'kanban' ? 'active' : ''}`}
             onClick={() => onViewModeChange('kanban')}
           >
-            <Kanban size={14} /> Kanban Board
+            <Kanban size={14} /> Execution Board
           </button>
           <button 
             className={`view-tab-btn ${viewMode === 'materials' ? 'active' : ''}`}
