@@ -78,12 +78,20 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <button 
-              className="btn btn-outline btn-sm" 
-              style={{ padding: '3px 7px', fontSize: '10px', marginLeft: '6px' }}
+              className="btn btn-outline btn-sm btn-signout" 
+              style={{ 
+                padding: '4px 9px', 
+                fontSize: '11px', 
+                fontWeight: 600,
+                marginLeft: '8px',
+                color: 'var(--red)',
+                borderColor: 'var(--red-border)',
+                background: 'var(--red-light)'
+              }}
               onClick={onLogout}
-              title="Sign Out"
+              title="Sign Out of session"
             >
-              <LogOut size={11} /> Exit
+              <LogOut size={12} /> Sign Out
             </button>
           </div>
         ) : (

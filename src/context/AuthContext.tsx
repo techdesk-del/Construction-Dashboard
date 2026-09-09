@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  continueAsGuest: () => void;
   isCeoOrAdmin: boolean;
 }
 
@@ -98,10 +99,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('executive_user_session');
   };
 
+  const continueAsGuest = () => {
+    const guestUser: User = {
+      id: 'guest-usr',
+      name: 'Guest Stakeholder',
+      email: 'guest@chakramsar.com',
+      role: 'Contractor / Viewer',
+      avatar: '👁️',
+    };
+    setUser(guestUser);
+    localStorage.setItem('executive_user_session', JSON.stringify(guestUser));
+  };
+
   const isCeoOrAdmin = user?.role === 'CEO / Executive' || user?.role === 'Project Manager';
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, isCeoOrAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, continueAsGuest, isCeoOrAdmin }}>
       {children}
     </AuthContext.Provider>
   );

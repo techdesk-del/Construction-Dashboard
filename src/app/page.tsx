@@ -14,11 +14,12 @@ import { AnalyticsView } from '@/components/AnalyticsView';
 import { ActivityModal } from '@/components/ActivityModal';
 import { MaterialModal } from '@/components/MaterialModal';
 import { LoginModal } from '@/components/LoginModal';
+import { AuthScreen } from '@/components/AuthScreen';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { CheckCircle2 } from 'lucide-react';
 
 function DashboardContent() {
-  const { user, logout, isCeoOrAdmin } = useAuth();
+  const { user, loading: authLoading, logout, continueAsGuest, isCeoOrAdmin } = useAuth();
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
   const [materials, setMaterials] = useState<MaterialItem[]>(INITIAL_MATERIALS);
   const [loading, setLoading] = useState<boolean>(true);
@@ -306,6 +307,29 @@ function DashboardContent() {
     document.body.removeChild(link);
     showToast('Project snapshot JSON downloaded');
   };
+
+  if (authLoading) {
+    return (
+      <div className="executive-loading-screen">
+        <div className="loading-spinner-ring" />
+        <div className="loading-brand-pill">Chakramsar Farmhouse Master Schedule</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthScreen
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onSuccess={() => showToast('Authenticated as Executive')}
+        onContinueAsGuest={() => {
+          continueAsGuest();
+          showToast('Browsing in Guest Stakeholder Mode');
+        }}
+      />
+    );
+  }
 
   return (
     <div className="app-container">
