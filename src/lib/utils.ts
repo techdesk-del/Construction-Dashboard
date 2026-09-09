@@ -83,9 +83,18 @@ export function computeKpis(activities: Activity[], refDate: Date = new Date()):
   let overdue = 0;
   let dueSoon = 0;
   let totalPctSum = 0;
+  let partialCount = 0;
+  let partial50Count = 0;
 
   activities.forEach(a => {
-    totalPctSum += a.pct || 0;
+    const p = typeof a.pct === 'number' ? a.pct : 0;
+    totalPctSum += p;
+    if (p > 0 && p < 100) {
+      partialCount++;
+      if (p >= 50) {
+        partial50Count++;
+      }
+    }
     const computed = computeStatus(a, refDate);
     if (computed === 'Completed') completed++;
     else if (computed === 'In Progress') inProgress++;
@@ -95,6 +104,8 @@ export function computeKpis(activities: Activity[], refDate: Date = new Date()):
 
   const phasesCount = new Set(activities.map(a => a.phase)).size;
   const overallPct = total > 0 ? Math.round(totalPctSum / total) : 0;
+  const completedPct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const equivalentCompleted = Number((totalPctSum / 100).toFixed(1));
 
   return {
     total,
@@ -104,6 +115,10 @@ export function computeKpis(activities: Activity[], refDate: Date = new Date()):
     dueSoon,
     overallPct,
     phasesCount,
+    partialCount,
+    partial50Count,
+    equivalentCompleted,
+    completedPct,
   };
 }
 

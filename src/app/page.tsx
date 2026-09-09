@@ -407,7 +407,7 @@ function DashboardContent() {
           </div>
 
           {/* CRM-Style KPI Deck */}
-          <KpiGrid kpis={kpis} />
+          <KpiGrid kpis={kpis} activities={activities} />
 
           {/* Active View Engine */}
           {viewMode === 'gantt' && (

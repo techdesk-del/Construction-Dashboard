@@ -48,6 +48,10 @@ export interface KpiSummary {
   dueSoon: number;
   overallPct: number;
   phasesCount: number;
+  partialCount?: number;
+  partial50Count?: number;
+  equivalentCompleted?: number;
+  completedPct?: number;
 }
 
 export type UserRole = 'CEO / Executive' | 'Project Manager' | 'Site Engineer' | 'Contractor / Viewer';
