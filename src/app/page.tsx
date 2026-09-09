@@ -13,9 +13,12 @@ import { MaterialTracker } from '@/components/MaterialTracker';
 import { AnalyticsView } from '@/components/AnalyticsView';
 import { ActivityModal } from '@/components/ActivityModal';
 import { MaterialModal } from '@/components/MaterialModal';
+import { LoginModal } from '@/components/LoginModal';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { CheckCircle2 } from 'lucide-react';
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const { user, logout, isCeoOrAdmin } = useAuth();
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
   const [materials, setMaterials] = useState<MaterialItem[]>(INITIAL_MATERIALS);
   const [loading, setLoading] = useState<boolean>(true);
@@ -33,6 +36,8 @@ export default function DashboardPage() {
 
   const [materialModalOpen, setMaterialModalOpen] = useState<boolean>(false);
   const [editingMaterial, setEditingMaterial] = useState<MaterialItem | null>(null);
+
+  const [loginModalOpen, setLoginModalOpen] = useState<boolean>(false);
 
   // Toast notification
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -316,6 +321,12 @@ export default function DashboardPage() {
         onDownloadCSV={handleDownloadCSV}
         onDownloadJSON={handleDownloadJSON}
         onResetData={handleReset}
+        user={user}
+        onOpenLogin={() => setLoginModalOpen(true)}
+        onLogout={async () => {
+          await logout();
+          showToast('Signed out of executive session');
+        }}
       />
 
       <main className="main-content">
@@ -349,7 +360,7 @@ export default function DashboardPage() {
               }}
             />
 
-            {/* Material & Procurement Tracker embedded below Gantt just like the blueprint */}
+            {/* Material & Procurement Tracker embedded below Gantt */}
             <MaterialTracker 
               materials={materials}
               onAddMaterial={() => {
@@ -426,6 +437,13 @@ export default function DashboardPage() {
         onDelete={handleDeleteMaterial}
       />
 
+      {/* Luxury Login & Signup Modal */}
+      <LoginModal 
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+        onSuccess={() => showToast('Authenticated successfully')}
+      />
+
       {/* Toast Notice */}
       {toastMsg && (
         <div className="toast-notice">
@@ -434,5 +452,13 @@ export default function DashboardPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthProvider>
+      <DashboardContent />
+    </AuthProvider>
   );
 }

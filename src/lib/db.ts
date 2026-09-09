@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Activity, MaterialItem } from '@/types';
+import { Activity, MaterialItem, User } from '@/types';
 import { INITIAL_ACTIVITIES, INITIAL_MATERIALS } from './initialData';
 
 const MONGODB_URI = process.env.MONGODB_URI || '';
@@ -22,6 +22,7 @@ export async function connectToDatabase(): Promise<typeof mongoose | null> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 2500,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
@@ -106,6 +107,36 @@ class MemoryStore {
     const initialLen = this.materials.length;
     this.materials = this.materials.filter(m => m.id !== id);
     return this.materials.length < initialLen;
+  }
+
+  private users: (User & { password?: string })[] = [
+    {
+      id: 'usr-ceo-01',
+      name: 'Executive CEO',
+      email: 'ceo@chakramsar.com',
+      role: 'CEO / Executive',
+      avatar: '👔',
+    },
+    {
+      id: 'usr-eng-01',
+      name: 'Lead Site Engineer',
+      email: 'engineer@chakramsar.com',
+      role: 'Site Engineer',
+      avatar: '👷‍♂️',
+    },
+  ];
+
+  findUserByEmail(email: string) {
+    return this.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  createUser(user: Omit<User, 'id'> & { password?: string }) {
+    const newUser = {
+      ...user,
+      id: 'usr-' + Date.now(),
+    };
+    this.users.push(newUser);
+    return newUser;
   }
 
   resetToInitial() {

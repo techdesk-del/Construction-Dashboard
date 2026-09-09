@@ -49,3 +49,13 @@ export interface KpiSummary {
   overallPct: number;
   phasesCount: number;
 }
+
+export type UserRole = 'CEO / Executive' | 'Project Manager' | 'Site Engineer' | 'Contractor / Viewer';
+
+export interface User {
+  id?: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+}

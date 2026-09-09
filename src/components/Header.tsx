@@ -10,8 +10,11 @@ import {
   Sun, 
   Moon, 
   FileSpreadsheet,
-  Layers
+  LogIn,
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
+import { User } from '@/types';
 
 interface HeaderProps {
   lastUpdated: string;
@@ -21,6 +24,9 @@ interface HeaderProps {
   onDownloadJSON: () => void;
   onDownloadCSV: () => void;
   onResetData: () => void;
+  user: User | null;
+  onOpenLogin: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,6 +37,9 @@ export const Header: React.FC<HeaderProps> = ({
   onDownloadJSON,
   onDownloadCSV,
   onResetData,
+  user,
+  onOpenLogin,
+  onLogout,
 }) => {
   return (
     <header className="executive-topbar">
@@ -47,6 +56,46 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="topbar-right">
+        {/* User Profile Pill */}
+        {user ? (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '3px 10px',
+            background: 'var(--surface-alt)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
+            marginRight: '2px',
+          }}>
+            <span style={{ fontSize: '15px' }}>{user.avatar || '👤'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>
+                {user.name}
+              </span>
+              <span style={{ fontSize: '9.5px', color: 'var(--blue)', fontWeight: 700 }}>
+                {user.role}
+              </span>
+            </div>
+            <button 
+              className="btn btn-outline btn-sm" 
+              style={{ padding: '3px 7px', fontSize: '10px', marginLeft: '6px' }}
+              onClick={onLogout}
+              title="Sign Out"
+            >
+              <LogOut size={11} /> Exit
+            </button>
+          </div>
+        ) : (
+          <button 
+            className="btn btn-outline" 
+            onClick={onOpenLogin}
+            style={{ borderColor: 'var(--blue)', color: 'var(--blue)' }}
+          >
+            <LogIn size={14} /> Sign In
+          </button>
+        )}
+
         <button 
           className="btn btn-outline btn-icon" 
           onClick={onToggleTheme} 
