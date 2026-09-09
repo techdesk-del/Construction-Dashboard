@@ -34,6 +34,23 @@ export async function GET(req: NextRequest) {
           notes: m.notes || '',
         }));
         await MaterialModel.insertMany(seedData);
+      } else {
+        // If materials exist but are old generic activity titles, upgrade to genuine farmhouse materials
+        const firstDoc = await MaterialModel.findOne({ materialId: 1 });
+        if (firstDoc && (firstDoc.name === 'Waterproofing' || firstDoc.name === 'Plaster')) {
+          await MaterialModel.deleteMany({});
+          const seedData = INITIAL_MATERIALS.map((m) => ({
+            materialId: m.id,
+            name: m.name,
+            mat: m.mat,
+            work: m.work,
+            resp: m.resp,
+            deadline: m.deadline,
+            phase: m.phase || '',
+            notes: m.notes || '',
+          }));
+          await MaterialModel.insertMany(seedData);
+        }
       }
 
       const query: any = {};

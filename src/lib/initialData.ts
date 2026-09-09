@@ -28,24 +28,41 @@ export const INITIAL_ACTIVITIES: Activity[] = [
 ];
 
 export const INITIAL_MATERIALS: MaterialItem[] = [
-  { id: 1, name: 'Waterproofing', mat: 'Delivered', work: 'Pending', resp: 'Aditya Construction', deadline: '07 Sep 2026', phase: 'Critical Civil & External' },
-  { id: 2, name: 'Plaster', mat: 'Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '12 Sep 2026', phase: 'Critical Civil & External' },
-  { id: 3, name: 'Stone Masonary', mat: 'To be Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '28 Sep 2026', phase: 'Critical Civil & External' },
-  { id: 4, name: 'Brick Masonary', mat: 'Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '13 Sep 2026', phase: 'Critical Civil & External' },
-  { id: 5, name: 'Electrical', mat: 'Selection Pending', work: 'Pending', resp: 'Ganesh Ji', deadline: '28 Oct 2026', phase: 'Services' },
-  { id: 6, name: 'BT Plumbing', mat: 'Partial', work: 'Not Started', resp: 'Plumbing Team', deadline: '30 Sep 2026', phase: 'Services' },
-  { id: 7, name: 'Kitchen Counter', mat: 'Delivered', work: 'Pending', resp: 'Kitchen Vendor', deadline: '20 Sep 2026', phase: 'Finishes' },
-  { id: 8, name: 'Bathroom Counter', mat: 'Delivered', work: 'Pending', resp: 'Tiling Team', deadline: '15 Sep 2026', phase: 'Finishes' },
-  { id: 9, name: 'MS Fab. Stairs', mat: 'Delivered', work: 'Complete', resp: 'Fabricator (Izhan)', deadline: '18 Sep 2026', phase: 'Openings' },
-  { id: 10, name: 'MS Fab. Roof', mat: 'To be Delivered', work: 'Pending', resp: 'Fabricator', deadline: '18 Sep 2026', phase: 'Critical Civil & External' },
-  { id: 11, name: 'Roof Flooring', mat: 'Selection Pending', work: 'Pending', resp: 'Nanak', deadline: '22 Sep 2026', phase: 'Critical Civil & External' },
-  { id: 12, name: 'False Ceiling', mat: 'Delivered', work: 'In Progress', resp: 'Vendor', deadline: '08 Oct 2026', phase: 'Finishes' },
-  { id: 13, name: 'Flooring Tiles', mat: 'Delivered', work: 'Pending', resp: 'Tiling Team', deadline: '10 Oct 2026', phase: 'Finishes' },
-  { id: 14, name: 'Wall Tiles', mat: 'Delivered', work: 'Pending', resp: 'Tiling Team', deadline: '01 Oct 2026', phase: 'Finishes' },
-  { id: 15, name: 'Paint', mat: 'Selection Pending', work: 'Pending', resp: 'Painter', deadline: '16 Oct 2026', phase: 'Finishes' },
-  { id: 16, name: 'Furniture', mat: 'To be Delivered', work: 'Pending', resp: 'Vendor', deadline: '25 Oct 2026', phase: 'Interior' },
-  { id: 17, name: 'Sliding Doors', mat: 'Selection Pending', work: 'Pending', resp: 'Hyper Interiors', deadline: '10 Oct 2026', phase: 'Openings' },
-  { id: 18, name: 'Windows', mat: 'Selection Pending', work: 'Pending', resp: 'Hyper Interiors', deadline: '10 Oct 2026', phase: 'Openings' },
-  { id: 19, name: 'Swimming Pool', mat: 'To be Delivered', work: 'In Progress', resp: 'DD Pools', deadline: '26 Sep 2026', phase: 'Swimming Pool' },
-  { id: 20, name: 'Outer Area Dev.', mat: 'Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '26 Sep 2026', phase: 'Critical Civil & External' },
+  // ── 1. Critical Civil & External ──
+  { id: 1, name: 'Dr. Fixit 2K Polymer Chemical & Fiber Mesh', mat: 'Delivered', work: 'In Progress', resp: 'Aditya Construction', deadline: '07 Sep 2026', phase: 'Critical Civil & External', notes: 'Waterproofing for sunken slabs & roof terrace (30 Barrels)' },
+  { id: 2, name: 'Ultratech OPC 53 Grade Structural Cement', mat: 'Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '09 Sep 2026', phase: 'Critical Civil & External', notes: '500 Bags batch for masonry & structural plaster' },
+  { id: 3, name: 'Class-1 Red Clay Kiln Bricks (50k Pcs)', mat: 'Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '13 Sep 2026', phase: 'Critical Civil & External', notes: 'Perimeter boundary walls and room partitions' },
+  { id: 4, name: 'Dholpur Natural Sandstone Blocks & Cladding', mat: 'To be Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '28 Sep 2026', phase: 'Critical Civil & External', notes: 'Hand-chiseled elevation cladding stone' },
+  { id: 5, name: 'Tata Structura Hollow Steel Trusses (IS 4923)', mat: 'To be Delivered', work: 'Pending', resp: 'Fabricator', deadline: '18 Sep 2026', phase: 'Critical Civil & External', notes: 'Heavy gauge steel rafters for terrace canopy' },
+  { id: 6, name: 'Jaisalmer Crazy Pattern Natural Stone Slabs', mat: 'Selection Pending', work: 'Pending', resp: 'Nanak', deadline: '22 Sep 2026', phase: 'Critical Civil & External', notes: 'Crazy paving pattern for rooftop lounge sit-out' },
+  { id: 7, name: 'Heavy-Duty M-30 Interlocking Pavers & Kerbs', mat: 'Delivered', work: 'In Progress', resp: 'RS Construction', deadline: '26 Sep 2026', phase: 'Critical Civil & External', notes: 'Driveway, driveway curbs & vehicle parking lot' },
+
+  // ── 2. Swimming Pool ──
+  { id: 8, name: 'Crystal Azure Glass Mosaic Tiles & Epoxy Grout', mat: 'To be Delivered', work: 'In Progress', resp: 'DD Pools', deadline: '26 Sep 2026', phase: 'Swimming Pool', notes: '25x25mm pool mosaic with anti-fungal epoxy grout' },
+  { id: 9, name: 'Pentair Sand Filtration Plant & 1.5HP Pump', mat: 'Selection Pending', work: 'Pending', resp: 'DD Pools', deadline: '24 Sep 2026', phase: 'Swimming Pool', notes: 'Commercial pool circulation unit, skimmers & nozzles' },
+  { id: 10, name: 'IP68 Submersible Warm White LED Pool Lights', mat: 'To be Delivered', work: 'Not Started', resp: 'DD Pools', deadline: '25 Sep 2026', phase: 'Swimming Pool', notes: '12V safe underwater lights with silicone sealing' },
+
+  // ── 3. Services (Plumbing & Electrical) ──
+  { id: 11, name: 'Astral CPVC / SWR Heavy Duty Pressure Pipes', mat: 'Partial', work: 'In Progress', resp: 'Plumbing Team', deadline: '18 Sep 2026', phase: 'Services', notes: 'Hot/cold concealed lines, soil stacks & floor traps' },
+  { id: 12, name: 'Sintex 3-Layer Antimicrobial Overhead Tanks', mat: 'Delivered', work: 'Complete', resp: 'Plumbing Team', deadline: '14 Sep 2026', phase: 'Services', notes: '2 Units 2000L UV-protected overhead storage tanks' },
+  { id: 13, name: 'Polycab FRLS Copper Cables & Heavy Conduits', mat: 'Selection Pending', work: 'Pending', resp: 'Ganesh Ji', deadline: '21 Sep 2026', phase: 'Services', notes: 'Fire retardant 1.5, 2.5, 4 sq.mm wiring & PVC conduit runs' },
+  { id: 14, name: 'Legrand Modular Switches & Distribution Boards', mat: 'Selection Pending', work: 'Not Started', resp: 'Ganesh Ji', deadline: '28 Oct 2026', phase: 'Services', notes: 'Matte grey switchplates, MCBs, RCCB shock safety breaker' },
+
+  // ── 4. Finishes ──
+  { id: 15, name: 'Saint-Gobain Gyproc 12.5mm Ceiling Boards & GI', mat: 'Delivered', work: 'In Progress', resp: 'False Ceiling Vendor', deadline: '02 Oct 2026', phase: 'Finishes', notes: 'Moisture-resistant drywall boards & GI perimeter channels' },
+  { id: 16, name: 'Kajaria 1200x600mm Vitrified Bathroom Wall Tiles', mat: 'Delivered', work: 'Pending', resp: 'Tiling Team', deadline: '24 Sep 2026', phase: 'Finishes', notes: 'Matte stone porcelain tiles for master and guest suites' },
+  { id: 17, name: 'Full Body Italian Marble Countertop Slabs', mat: 'Delivered', work: 'Pending', resp: 'Kitchen Vendor', deadline: '20 Sep 2026', phase: 'Finishes', notes: 'Seamless 20mm slab for island kitchen & breakfast counter' },
+  { id: 18, name: 'Black Galaxy Granite Vanity Counters', mat: 'Delivered', work: 'Pending', resp: 'Tiling Team', deadline: '15 Sep 2026', phase: 'Finishes', notes: 'Pre-moulded undermount vanity counters for washrooms' },
+  { id: 19, name: 'Somany 800x1600mm High Gloss Vitrified Tiles', mat: 'Delivered', work: 'Pending', resp: 'Tiling Team', deadline: '02 Oct 2026', phase: 'Finishes', notes: 'Main living hall & bed suites primary flooring' },
+  { id: 20, name: 'Asian Paints Royale Luxury Emulsion & Putty', mat: 'Selection Pending', work: 'Pending', resp: 'Painter', deadline: '11 Oct 2026', phase: 'Finishes', notes: 'Interior acrylic putty & luxury interior paint (200L)' },
+
+  // ── 5. Openings ──
+  { id: 21, name: 'Domal 27mm Heavy Duty Aluminium Sliding Doors', mat: 'Selection Pending', work: 'Pending', resp: 'Door/Window Vendor', deadline: '04 Oct 2026', phase: 'Openings', notes: '4 Sets anodized black frames with multi-point locks' },
+  { id: 22, name: 'Soundproof Toughened DGU Glass Windows', mat: 'Selection Pending', work: 'Pending', resp: 'Door/Window Vendor', deadline: '04 Oct 2026', phase: 'Openings', notes: '5 Sets casement windows with SS mosquito mesh' },
+  { id: 23, name: 'Custom MS Spiral Staircase Stringers & Rails', mat: 'Delivered', work: 'Complete', resp: 'Fabricator (Izhan)', deadline: '14 Sep 2026', phase: 'Openings', notes: '6mm plate tread brackets, anti-rust zinc primer coated' },
+
+  // ── 6. Interior ──
+  { id: 24, name: 'Custom Fluted Charcoal Louvers & Teak Veneer', mat: 'To be Delivered', work: 'Pending', resp: 'Furniture Vendor', deadline: '11 Oct 2026', phase: 'Interior', notes: 'Lounge feature wall & master bedroom wardrobe paneling' },
+  { id: 25, name: 'Saint-Gobain 5mm LED Backlit Vanity Mirrors', mat: 'Selection Pending', work: 'Not Started', resp: 'Interior Vendor', deadline: '11 Oct 2026', phase: 'Interior', notes: '3 Nos touch-sensor anti-fog smart bathroom mirrors' },
+  { id: 26, name: 'Hikvision 4K IP CCTV Surveillance & NVR', mat: 'To be Delivered', work: 'Not Started', resp: 'ELV Vendor', deadline: '11 Oct 2026', phase: 'Interior', notes: 'Outdoor weather-resistant IP cameras with Cat6 PoE cables' },
 ];
