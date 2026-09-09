@@ -7,19 +7,16 @@ import {
   Download, 
   Printer, 
   RotateCcw, 
-  Sun, 
-  Moon, 
   FileSpreadsheet,
   LogIn,
   LogOut,
-  ShieldCheck
+  Database,
+  Sparkles
 } from 'lucide-react';
 import { User } from '@/types';
 
 interface HeaderProps {
   lastUpdated: string;
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
   onOpenAddActivity: () => void;
   onDownloadJSON: () => void;
   onDownloadCSV: () => void;
@@ -31,8 +28,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   lastUpdated,
-  theme,
-  onToggleTheme,
   onOpenAddActivity,
   onDownloadJSON,
   onDownloadCSV,
@@ -44,111 +39,89 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="executive-topbar">
       <div className="topbar-left">
-        <div className="brand-badge">
-          <Building2 size={12} /> Executive Construction Suite
+        <div className="brand-emblem-wrap">
+          <Building2 size={20} />
         </div>
-        <h1>Chakramsar Farmhouse — Master Schedule</h1>
-        <p>
-          <span>Interactive Gantt &amp; Procurement Engine</span>
-          <span>•</span>
-          <span>Last synchronized: <strong>{lastUpdated}</strong></span>
-        </p>
+        <div className="topbar-title-group">
+          <h1>Chakramsar Farmhouse</h1>
+          <p>
+            <span>Master Schedule &amp; Capital Project ERP</span>
+            <span>•</span>
+            <span>Sync: <strong>{lastUpdated}</strong></span>
+          </p>
+        </div>
       </div>
 
       <div className="topbar-right">
+        {/* Live MongoDB Status Pill */}
+        <div className="mongo-status-chip">
+          <span className="mongo-status-pulse" />
+          <Database size={12} />
+          <span>MongoDB Live</span>
+        </div>
+
         {/* User Profile Pill */}
         {user ? (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '3px 10px',
-            background: 'var(--surface-alt)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            marginRight: '2px',
-          }}>
-            <span style={{ fontSize: '15px' }}>{user.avatar || '👤'}</span>
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>
-                {user.name}
-              </span>
-              <span style={{ fontSize: '9.5px', color: 'var(--blue)', fontWeight: 700 }}>
-                {user.role}
-              </span>
+          <div className="user-profile-badge">
+            <span className="user-avatar-circle">{user.avatar || '👤'}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+              <span className="user-name-text">{user.name}</span>
+              <span className="user-role-text">{user.role}</span>
             </div>
             <button 
               className="btn btn-outline btn-sm btn-signout" 
-              style={{ 
-                padding: '4px 9px', 
-                fontSize: '11px', 
-                fontWeight: 600,
-                marginLeft: '8px',
-                color: 'var(--red)',
-                borderColor: 'var(--red-border)',
-                background: 'var(--red-light)'
-              }}
               onClick={onLogout}
-              title="Sign Out of session"
+              title="Sign Out of executive session"
             >
               <LogOut size={12} /> Sign Out
             </button>
           </div>
         ) : (
           <button 
-            className="btn btn-outline" 
+            className="btn btn-primary btn-sm" 
             onClick={onOpenLogin}
-            style={{ borderColor: 'var(--blue)', color: 'var(--blue)' }}
           >
-            <LogIn size={14} /> Sign In
+            <LogIn size={13} /> Sign In
           </button>
         )}
 
         <button 
-          className="btn btn-outline btn-icon" 
-          onClick={onToggleTheme} 
-          title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-        >
-          {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
-        </button>
-
-        <button 
-          className="btn btn-outline" 
+          className="btn btn-outline btn-sm" 
           onClick={onResetData} 
-          title="Reset to original blueprint benchmark dataset"
+          title="Restore baseline benchmark schedule"
         >
-          <RotateCcw size={14} /> Reset
+          <RotateCcw size={13} /> Reset
         </button>
 
         <button 
-          className="btn btn-outline" 
+          className="btn btn-outline btn-sm" 
           onClick={onDownloadCSV} 
           title="Export CSV spreadsheet"
         >
-          <FileSpreadsheet size={14} /> CSV
+          <FileSpreadsheet size={13} /> CSV
         </button>
 
         <button 
-          className="btn btn-outline" 
+          className="btn btn-outline btn-sm" 
           onClick={onDownloadJSON} 
-          title="Download snapshot JSON"
+          title="Export JSON snapshot"
         >
-          <Download size={14} /> Snapshot
+          <Download size={13} /> Snapshot
         </button>
 
         <button 
-          className="btn btn-outline btn-icon" 
+          className="btn btn-outline btn-sm btn-icon" 
           onClick={() => window.print()} 
-          title="Print / Executive PDF"
+          title="Print Executive PDF"
         >
-          <Printer size={15} />
+          <Printer size={14} />
         </button>
 
         <button 
-          className="btn btn-primary" 
+          className="btn btn-blue btn-sm" 
           onClick={onOpenAddActivity}
         >
-          <Plus size={15} /> Add Activity
+          <Plus size={14} /> Add Activity
         </button>
       </div>
     </header>

@@ -23,7 +23,11 @@ function DashboardContent() {
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
   const [materials, setMaterials] = useState<MaterialItem[]>(INITIAL_MATERIALS);
   const [loading, setLoading] = useState<boolean>(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  // Ensure clean Light Mode on mount
+  useEffect(() => {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('site_theme');
+  }, []);
 
   // View & Filters
   const [viewMode, setViewMode] = useState<ViewMode>('gantt');
@@ -48,23 +52,6 @@ function DashboardContent() {
     setTimeout(() => {
       setToastMsg((current) => (current === msg ? null : current));
     }, 2800);
-  };
-
-  // Synchronize Theme
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('site_theme') as 'light' | 'dark' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(nextTheme);
-    document.documentElement.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('site_theme', nextTheme);
-    showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`);
   };
 
   // Fetch from API on mount
@@ -320,8 +307,6 @@ function DashboardContent() {
   if (!user) {
     return (
       <AuthScreen
-        theme={theme}
-        onToggleTheme={toggleTheme}
         onSuccess={() => showToast('Authenticated as Executive')}
         onContinueAsGuest={() => {
           continueAsGuest();
@@ -336,8 +321,6 @@ function DashboardContent() {
       {/* Executive Command Header */}
       <Header 
         lastUpdated={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-        theme={theme}
-        onToggleTheme={toggleTheme}
         onOpenAddActivity={() => {
           setEditingActivity(null);
           setActivityModalOpen(true);

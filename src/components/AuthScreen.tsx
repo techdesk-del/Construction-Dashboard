@@ -5,33 +5,24 @@ import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types';
 import { 
   Building2, 
-  KeyRound, 
   Mail, 
   User as UserIcon, 
   ShieldCheck, 
   Sparkles, 
   ArrowRight, 
   Database, 
-  Sun, 
-  Moon, 
   Eye, 
   EyeOff, 
   Lock, 
-  CheckCircle2,
-  HardHat,
   Briefcase
 } from 'lucide-react';
 
 interface AuthScreenProps {
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
   onSuccess?: () => void;
   onContinueAsGuest?: () => void;
 }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({
-  theme,
-  onToggleTheme,
   onSuccess,
   onContinueAsGuest,
 }) => {
@@ -67,7 +58,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
     if (isSignup) {
       if (!name.trim()) {
-        setError('Please provide your full executive/engineer name');
+        setError('Please provide your full name');
         setSubmitting(false);
         return;
       }
@@ -107,21 +98,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </div>
         </div>
 
-        <div className="auth-topbar-actions">
-          <div className="auth-mongo-badge">
-            <span className="mongo-pulse-dot" />
-            <Database size={13} />
-            <span>MongoDB Atlas Connected</span>
-          </div>
-
-          <button 
-            type="button"
-            className="btn btn-outline btn-icon" 
-            onClick={onToggleTheme} 
-            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
-          >
-            {theme === 'light' ? <Moon size={15} /> : <Sun size={15} />}
-          </button>
+        <div className="auth-mongo-badge">
+          <span className="mongo-pulse-dot" />
+          <Database size={13} />
+          <span>MongoDB Atlas Live</span>
         </div>
       </header>
 
@@ -139,8 +119,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             </h1>
             <p className="auth-subtext">
               {isSignup 
-                ? 'Register an executive role to manage the construction schedule and procurement.'
-                : 'Access the interactive Master Gantt, procurement tracker, and real-time site analytics.'
+                ? 'Register an executive profile to manage construction timelines and materials.'
+                : 'Access the interactive Master Gantt, procurement matrix, and site analytics.'
               }
             </p>
           </div>
@@ -186,7 +166,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
           {/* Divider */}
           <div className="auth-divider">
-            <span>{isSignup ? 'ACCOUNT DETAILS' : 'OR SIGN IN WITH CREDENTIALS'}</span>
+            <span>{isSignup ? 'ENTER CREDENTIALS' : 'OR SIGN IN WITH EMAIL'}</span>
           </div>
 
           {/* Error Message */}
@@ -308,7 +288,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                 className="auth-guest-link"
                 onClick={onContinueAsGuest}
               >
-                Continue as Guest / Viewer (Read Only)
+                Continue as Guest / Stakeholder (Read Only)
               </button>
             )}
           </div>
