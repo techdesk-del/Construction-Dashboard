@@ -242,14 +242,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
               <th className="sticky-col-act">Activity</th>
               <th>Responsible</th>
               <th>Start</th>
-              <th>Deadline</th>
-              <th style={{ textAlign: 'center' }}>Days</th>
-              <th style={{ textAlign: 'center' }}>% Done</th>
-              <th>Status</th>
-              <th style={{ textAlign: 'center' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-                  <span>Action</span>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+              <th style={{ minWidth: '120px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
+                  <span>Deadline</span>
+                  <div className="mid-col-arrow-group" title="Slide View Left / Right">
                     <button
                       type="button"
                       className="col-arrow-btn"
@@ -269,6 +265,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                   </div>
                 </div>
               </th>
+              <th style={{ textAlign: 'center' }}>Days</th>
+              <th style={{ textAlign: 'center' }}>% Done</th>
+              <th>Status</th>
+              <th style={{ textAlign: 'center' }}>Action</th>
               <th className="chart-col">
                 <div className="chart-header">
                   {/* Top Tier: Month Bands */}
@@ -309,29 +309,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             {groupedPhases.map((group) => (
               <React.Fragment key={group.phase}>
                 <tr className="phase-row phase-header-row">
-                  <td colSpan={10} className="sticky-col-id">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: '16px' }}>
-                      <span>{group.phase}</span>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <button
-                          type="button"
-                          className="col-arrow-btn"
-                          onClick={() => slideBy(-400)}
-                          title="Slide Left"
-                        >
-                          <ChevronLeft size={13} />
-                        </button>
-                        <button
-                          type="button"
-                          className="col-arrow-btn"
-                          onClick={() => slideBy(400)}
-                          title="Slide Right"
-                        >
-                          <ChevronRight size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  </td>
+                  <td colSpan={10} className="sticky-col-id">{group.phase}</td>
                 </tr>
                 {group.items.map((act) => {
                   const status = computeStatus(act);
