@@ -372,20 +372,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                           </span>
                         )}
                         {getPriorityBadge(act.priority)}
-                        {act.id === 5 && (
-                          <button
-                            type="button"
-                            className="col-arrow-btn"
-                            style={{ marginLeft: 'auto', background: '#f1f5f9', border: '1px solid #cbd5e1' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              slideBy(scrollPct > 20 ? -450 : 450);
-                            }}
-                            title="Click to slide table view"
-                          >
-                            {scrollPct > 20 ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
-                          </button>
-                        )}
                       </td>
 
                       {/* Responsible */}
@@ -456,35 +442,13 @@ export const GanttChart: React.FC<GanttChartProps> = ({
                             }}
                           />
                         ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
-                            <span 
-                              className="editable"
-                              title="Click to inline edit deadline"
-                              onClick={() => startEditing(act.id, 'end', act.end)}
-                            >
-                              {fmtShort(act.end)}
-                            </span>
-                            {act.id === 5 && (
-                              <div className="mid-col-arrow-group" title="Slide Table / Timeline" onClick={(e) => e.stopPropagation()}>
-                                <button
-                                  type="button"
-                                  className="col-arrow-btn"
-                                  onClick={() => slideBy(-400)}
-                                  title="Slide Left"
-                                >
-                                  <ChevronLeft size={12} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="col-arrow-btn"
-                                  onClick={() => slideBy(400)}
-                                  title="Slide Right"
-                                >
-                                  <ChevronRight size={12} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                          <span 
+                            className="editable"
+                            title="Click to inline edit deadline"
+                            onClick={() => startEditing(act.id, 'end', act.end)}
+                          >
+                            {fmtShort(act.end)}
+                          </span>
                         )}
                       </td>
 
