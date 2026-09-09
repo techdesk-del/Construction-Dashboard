@@ -25,8 +25,22 @@ export async function POST(req: NextRequest) {
     // Update MongoDB if connected
     const db = await connectToDatabase();
     if (db) {
-      // Update each activity's activityId and phase in MongoDB
-      const bulkOps = resequenced.map((act) => ({
+      // Two-phase update to avoid E11000 duplicate key collision on unique activityId index
+      const phaseOneOps = resequenced.map((act, idx) => ({
+        updateOne: {
+          filter: { name: act.name },
+          update: { 
+            $set: { 
+              activityId: -1 * (idx + 1000),
+            } 
+          },
+        },
+      }));
+      if (phaseOneOps.length > 0) {
+        await ActivityModel.bulkWrite(phaseOneOps);
+      }
+
+      const phaseTwoOps = resequenced.map((act) => ({
         updateOne: {
           filter: { name: act.name },
           update: { 
@@ -37,8 +51,8 @@ export async function POST(req: NextRequest) {
           },
         },
       }));
-      if (bulkOps.length > 0) {
-        await ActivityModel.bulkWrite(bulkOps);
+      if (phaseTwoOps.length > 0) {
+        await ActivityModel.bulkWrite(phaseTwoOps);
       }
     }
 
