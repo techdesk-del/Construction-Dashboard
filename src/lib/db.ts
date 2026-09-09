@@ -1,0 +1,122 @@
+import mongoose from 'mongoose';
+import { Activity, MaterialItem } from '@/types';
+import { INITIAL_ACTIVITIES, INITIAL_MATERIALS } from './initialData';
+
+const MONGODB_URI = process.env.MONGODB_URI || '';
+
+let cached = (global as any).mongoose;
+
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
+
+export async function connectToDatabase(): Promise<typeof mongoose | null> {
+  if (!MONGODB_URI) {
+    return null;
+  }
+
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+    };
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      return mongooseInstance;
+    }).catch((err) => {
+      console.warn('MongoDB connection error, falling back to local store:', err.message);
+      cached.promise = null;
+      return null;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    return null;
+  }
+
+  return cached.conn;
+}
+
+// In-memory fallback repository to ensure high-performance immediate reactivity
+class MemoryStore {
+  private activities: Activity[] = JSON.parse(JSON.stringify(INITIAL_ACTIVITIES));
+  private materials: MaterialItem[] = JSON.parse(JSON.stringify(INITIAL_MATERIALS));
+
+  getActivities(): Activity[] {
+    return this.activities;
+  }
+
+  setActivities(acts: Activity[]) {
+    this.activities = acts;
+  }
+
+  getActivityById(id: number): Activity | undefined {
+    return this.activities.find(a => a.id === id);
+  }
+
+  createActivity(activity: Omit<Activity, 'id'>): Activity {
+    const newId = this.activities.length ? Math.max(...this.activities.map(a => a.id)) + 1 : 1;
+    const newActivity: Activity = { ...activity, id: newId };
+    this.activities.push(newActivity);
+    return newActivity;
+  }
+
+  updateActivity(id: number, updates: Partial<Activity>): Activity | null {
+    const idx = this.activities.findIndex(a => a.id === id);
+    if (idx === -1) return null;
+    this.activities[idx] = { ...this.activities[idx], ...updates };
+    return this.activities[idx];
+  }
+
+  deleteActivity(id: number): boolean {
+    const initialLen = this.activities.length;
+    this.activities = this.activities.filter(a => a.id !== id);
+    return this.activities.length < initialLen;
+  }
+
+  getMaterials(): MaterialItem[] {
+    return this.materials;
+  }
+
+  setMaterials(mats: MaterialItem[]) {
+    this.materials = mats;
+  }
+
+  createMaterial(material: Omit<MaterialItem, 'id'>): MaterialItem {
+    const newId = this.materials.length ? Math.max(...this.materials.map(m => m.id)) + 1 : 1;
+    const newMat: MaterialItem = { ...material, id: newId };
+    this.materials.push(newMat);
+    return newMat;
+  }
+
+  updateMaterial(id: number, updates: Partial<MaterialItem>): MaterialItem | null {
+    const idx = this.materials.findIndex(m => m.id === id);
+    if (idx === -1) return null;
+    this.materials[idx] = { ...this.materials[idx], ...updates };
+    return this.materials[idx];
+  }
+
+  deleteMaterial(id: number): boolean {
+    const initialLen = this.materials.length;
+    this.materials = this.materials.filter(m => m.id !== id);
+    return this.materials.length < initialLen;
+  }
+
+  resetToInitial() {
+    this.activities = JSON.parse(JSON.stringify(INITIAL_ACTIVITIES));
+    this.materials = JSON.parse(JSON.stringify(INITIAL_MATERIALS));
+  }
+}
+
+const globalStoreKey = Symbol.for('construction_memory_store');
+if (!(global as any)[globalStoreKey]) {
+  (global as any)[globalStoreKey] = new MemoryStore();
+}
+
+export const memoryStore: MemoryStore = (global as any)[globalStoreKey];
