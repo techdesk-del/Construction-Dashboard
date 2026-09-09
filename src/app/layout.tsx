@@ -4,8 +4,11 @@ import fs from 'fs';
 import path from 'path';
 
 export const metadata: Metadata = {
-  title: 'Chakramsar Farmhouse — Master Schedule & Construction ERP',
-  description: 'Executive-grade interactive Gantt schedule, material procurement matrix, and contractor tracking for Chakramsar Farmhouse.',
+  title: 'UrbanGaon — Chakramsar Farmhouse Master Schedule & ERP',
+  description: 'Executive-grade interactive Gantt schedule, material procurement matrix, and contractor tracking for Chakramsar Farmhouse by UrbanGaon.',
+  icons: {
+    icon: '/logo.jpg',
+  },
 };
 
 export default function RootLayout({

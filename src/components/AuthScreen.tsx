@@ -89,9 +89,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {/* Top Brand Bar */}
       <header className="auth-topbar">
         <div className="auth-brand">
-          <div className="auth-brand-icon">
-            <Building2 size={20} />
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="UrbanGaon" 
+            style={{
+              height: '36px',
+              width: 'auto',
+              objectFit: 'contain',
+              borderRadius: 'var(--radius-xs)',
+            }} 
+          />
+          <div style={{ height: '26px', width: '1px', background: 'var(--border)', margin: '0 4px' }} />
           <div>
             <div className="auth-brand-title">Chakramsar Farmhouse</div>
             <div className="auth-brand-subtitle">Master Schedule &amp; ERP Suite</div>
@@ -110,6 +118,17 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         <div className="auth-card">
           {/* Card Header */}
           <div className="auth-card-header">
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <img 
+                src="/logo.jpg" 
+                alt="UrbanGaon" 
+                style={{
+                  height: '46px',
+                  width: 'auto',
+                  objectFit: 'contain',
+                }} 
+              />
+            </div>
             <div className="auth-pill-tag">
               <ShieldCheck size={13} />
               <span>Executive Access Portal</span>

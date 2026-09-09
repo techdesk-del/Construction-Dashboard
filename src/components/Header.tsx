@@ -39,9 +39,17 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="executive-topbar">
       <div className="topbar-left">
-        <div className="brand-emblem-wrap">
-          <Building2 size={20} />
-        </div>
+        <img 
+          src="/logo.jpg" 
+          alt="UrbanGaon" 
+          style={{
+            height: '38px',
+            width: 'auto',
+            objectFit: 'contain',
+            borderRadius: 'var(--radius-xs)',
+          }} 
+        />
+        <div style={{ height: '30px', width: '1px', background: 'var(--border)', margin: '0 4px' }} />
         <div className="topbar-title-group">
           <h1>Chakramsar Farmhouse</h1>
           <p>
