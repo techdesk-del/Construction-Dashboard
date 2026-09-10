@@ -109,6 +109,26 @@ class MemoryStore {
     return this.materials.length < initialLen;
   }
 
+  renamePhase(oldPhase: string, newPhase: string): { activitiesUpdated: number; materialsUpdated: number } {
+    let activitiesUpdated = 0;
+    let materialsUpdated = 0;
+    this.activities = this.activities.map(a => {
+      if (a.phase === oldPhase) {
+        activitiesUpdated++;
+        return { ...a, phase: newPhase };
+      }
+      return a;
+    });
+    this.materials = this.materials.map(m => {
+      if (m.phase === oldPhase) {
+        materialsUpdated++;
+        return { ...m, phase: newPhase };
+      }
+      return m;
+    });
+    return { activitiesUpdated, materialsUpdated };
+  }
+
   private users: (User & { password?: string })[] = [
     {
       id: 'usr-ceo-01',
@@ -146,8 +166,13 @@ class MemoryStore {
 }
 
 const globalStoreKey = Symbol.for('construction_memory_store');
-if (!(global as any)[globalStoreKey]) {
-  (global as any)[globalStoreKey] = new MemoryStore();
+if (!(global as any)[globalStoreKey] || typeof (global as any)[globalStoreKey].renamePhase !== 'function') {
+  const existingActivities = (global as any)[globalStoreKey]?.getActivities?.();
+  const existingMaterials = (global as any)[globalStoreKey]?.getMaterials?.();
+  const newStore = new MemoryStore();
+  if (existingActivities && existingActivities.length > 0) newStore.setActivities(existingActivities);
+  if (existingMaterials && existingMaterials.length > 0) newStore.setMaterials(existingMaterials);
+  (global as any)[globalStoreKey] = newStore;
 }
 
 export const memoryStore: MemoryStore = (global as any)[globalStoreKey];

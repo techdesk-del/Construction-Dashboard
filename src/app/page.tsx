@@ -42,7 +42,7 @@ function DashboardContent() {
       try {
         const saved = localStorage.getItem('construction_custom_phases');
         if (saved) return JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) { }
     }
     return [];
   });
@@ -64,7 +64,7 @@ function DashboardContent() {
           const next = [...prev, trimmed];
           try {
             localStorage.setItem('construction_custom_phases', JSON.stringify(next));
-          } catch (e) {}
+          } catch (e) { }
           return next;
         }
         return prev;
@@ -73,18 +73,20 @@ function DashboardContent() {
   };
 
   const allPhases = useMemo(() => {
-    const defaultList = [
-      'Critical Civil & External',
-      'Swimming Pool',
-      'Services',
-      'Finishes',
-      'Openings',
-      'Interior',
-    ];
-    const set = new Set<string>(defaultList);
-    customPhases.forEach((p) => { if (p && p.trim()) set.add(p.trim()); });
+    const set = new Set<string>();
     activities.forEach((a) => { if (a.phase && a.phase.trim()) set.add(a.phase.trim()); });
     materials.forEach((m) => { if (m.phase && m.phase.trim()) set.add(m.phase.trim()); });
+    customPhases.forEach((p) => { if (p && p.trim()) set.add(p.trim()); });
+    if (set.size === 0) {
+      [
+        'Critical Civil & External',
+        'Swimming Pool',
+        'Services',
+        'Finishes',
+        'Openings',
+        'Interior',
+      ].forEach((p) => set.add(p));
+    }
     return Array.from(set);
   }, [activities, materials, customPhases]);
 
@@ -132,7 +134,7 @@ function DashboardContent() {
                 }).map((a, idx) => ({ ...a, id: idx + 1 }));
               }
             }
-          } catch (e) {}
+          } catch (e) { }
           setActivities(loaded);
         }
         if (matRes.success && Array.isArray(matRes.data) && matRes.data.length > 0) {
@@ -255,7 +257,7 @@ function DashboardContent() {
     setActivities(newActivities);
     try {
       localStorage.setItem('construction_activities_custom_order', JSON.stringify(newActivities));
-    } catch (e) {}
+    } catch (e) { }
 
     showToast('Activity schedule order updated');
 
@@ -267,6 +269,65 @@ function DashboardContent() {
       });
     } catch (err) {
       console.warn('Could not sync reorder to server:', err);
+    }
+  };
+
+  const handleRenamePhase = async (oldPhase: string, newPhase: string) => {
+    const trimmedOld = oldPhase.trim();
+    const trimmedNew = newPhase.trim();
+    if (!trimmedNew || trimmedNew === trimmedOld) return;
+
+    // 1. Optimistically update activities
+    setActivities((prev) =>
+      prev.map((a) => (a.phase === trimmedOld ? { ...a, phase: trimmedNew } : a))
+    );
+
+    // 2. Optimistically update materials
+    setMaterials((prev) =>
+      prev.map((m) => (m.phase === trimmedOld ? { ...m, phase: trimmedNew } : m))
+    );
+
+    // 3. Update custom phases list
+    setCustomPhases((prev) => {
+      const filtered = prev.filter((p) => p !== trimmedOld);
+      const next = filtered.includes(trimmedNew) ? filtered : [...filtered, trimmedNew];
+      try {
+        localStorage.setItem('construction_custom_phases', JSON.stringify(next));
+      } catch (e) { }
+      return next;
+    });
+
+    // 4. Update custom order in localStorage if stored
+    try {
+      const savedOrderStr = localStorage.getItem('construction_activities_custom_order');
+      if (savedOrderStr) {
+        const savedList: Activity[] = JSON.parse(savedOrderStr);
+        const updatedSavedList = savedList.map((a) =>
+          a.phase === trimmedOld ? { ...a, phase: trimmedNew } : a
+        );
+        localStorage.setItem(
+          'construction_activities_custom_order',
+          JSON.stringify(updatedSavedList)
+        );
+      }
+    } catch (e) { }
+
+    // 5. If filter is on oldPhase, switch filter to newPhase
+    if (selectedPhase === trimmedOld) {
+      setSelectedPhase(trimmedNew);
+    }
+
+    showToast(`Section "${trimmedOld}" renamed to "${trimmedNew}"`);
+
+    // 6. Sync to backend API
+    try {
+      await fetch('/api/phases', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPhase: trimmedOld, newPhase: trimmedNew }),
+      });
+    } catch (err) {
+      console.error('Failed to sync phase rename with server:', err);
     }
   };
 
@@ -425,7 +486,7 @@ function DashboardContent() {
       {/* ── RIGHT MAIN VIEWPORT ── */}
       <div className="crm-main-viewport">
         {/* Top Command Bar */}
-        <TopNavHeader 
+        <TopNavHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onOpenAddActivity={() => {
@@ -460,7 +521,7 @@ function DashboardContent() {
 
             {/* Quick Phase & Status Filters */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <select 
+              <select
                 className="select-input"
                 value={selectedPhase}
                 onChange={(e) => setSelectedPhase(e.target.value)}
@@ -472,7 +533,7 @@ function DashboardContent() {
                 ))}
               </select>
 
-              <select 
+              <select
                 className="select-input"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
@@ -492,7 +553,7 @@ function DashboardContent() {
 
           {/* Active View Engine */}
           {viewMode === 'gantt' && (
-            <GanttChart 
+            <GanttChart
               activities={filteredActivities}
               onUpdateActivity={handleUpdateActivity}
               onEditActivityModal={(id) => {
@@ -503,11 +564,12 @@ function DashboardContent() {
                 }
               }}
               onReorderActivities={handleReorderActivities}
+              onRenamePhase={handleRenamePhase}
             />
           )}
 
           {viewMode === 'kanban' && (
-            <KanbanView 
+            <KanbanView
               activities={filteredActivities}
               onUpdateActivity={handleUpdateActivity}
               onEditActivityModal={(id) => {
@@ -521,7 +583,7 @@ function DashboardContent() {
           )}
 
           {viewMode === 'materials' && (
-            <MaterialTracker 
+            <MaterialTracker
               materials={materials}
               availablePhases={allPhases}
               onAddMaterial={() => {
@@ -537,7 +599,7 @@ function DashboardContent() {
           )}
 
           {viewMode === 'analytics' && (
-            <AnalyticsView 
+            <AnalyticsView
               activities={activities}
               materials={materials}
             />
@@ -552,7 +614,7 @@ function DashboardContent() {
       </div>
 
       {/* Activity Add/Edit Modal */}
-      <ActivityModal 
+      <ActivityModal
         isOpen={activityModalOpen}
         activity={editingActivity}
         availablePhases={allPhases}
@@ -565,7 +627,7 @@ function DashboardContent() {
       />
 
       {/* Material Add/Edit Modal */}
-      <MaterialModal 
+      <MaterialModal
         isOpen={materialModalOpen}
         material={editingMaterial}
         availablePhases={allPhases}
@@ -578,7 +640,7 @@ function DashboardContent() {
       />
 
       {/* Luxury Login & Signup Modal */}
-      <LoginModal 
+      <LoginModal
         isOpen={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
         onSuccess={() => showToast('Authenticated successfully')}

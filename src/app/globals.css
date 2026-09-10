@@ -704,11 +704,189 @@ body {
   font-size: 12px !important;
   font-weight: 800 !important;
   color: var(--text-primary) !important;
-  padding: 10px 14px !important;
+  padding: 8px 14px !important;
   border-top: 1px solid var(--border) !important;
   border-bottom: 1px solid var(--border) !important;
-  text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.phase-row td.sticky-col-id {
+  background: #f1f5f9 !important;
+  width: auto !important;
+  min-width: unset !important;
+}
+
+.phase-header-display-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.phase-title-click-zone {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.phase-title-click-zone:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.phase-header-title-text {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.phase-header-edit-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.phase-title-click-zone:hover .phase-header-edit-trigger-btn {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: #eff6ff;
+}
+
+.phase-header-edit-trigger-btn:hover {
+  border-color: var(--blue) !important;
+  color: var(--blue) !important;
+  background: #eff6ff !important;
+  transform: translateY(-1px);
+}
+
+.phase-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: none;
+}
+
+.phase-badge-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Edit Mode Container */
+.phase-header-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-transform: none;
+  padding: 2px 0;
+}
+
+.phase-edit-field-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.phase-inline-input {
+  min-width: 320px;
+  max-width: 480px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: #ffffff;
+  border: 1.5px solid var(--blue);
+  border-radius: var(--radius-sm);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  transition: border-color 0.15s ease;
+  text-transform: none;
+}
+
+.phase-inline-input:focus {
+  border-color: #1d4ed8;
+}
+
+.phase-edit-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phase-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: none;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.2);
+}
+
+.phase-save-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.phase-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #ffffff;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: none;
+}
+
+.phase-cancel-btn:hover {
+  background: #f8fafc;
+  color: var(--text-primary);
+}
+
+.phase-edit-shortcut-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* Timeline Task Bars */

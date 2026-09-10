@@ -22,7 +22,9 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
-  ArrowUpDown
+  ArrowUpDown,
+  Check,
+  X
 } from 'lucide-react';
 import { Pagination } from './Pagination';
 
@@ -31,6 +33,7 @@ interface GanttChartProps {
   onUpdateActivity: (id: number, updates: Partial<Activity>) => void;
   onEditActivityModal: (id: number) => void;
   onReorderActivities?: (newActivities: Activity[]) => void;
+  onRenamePhase?: (oldPhase: string, newPhase: string) => void;
 }
 
 interface TooltipData {
@@ -45,7 +48,35 @@ export const GanttChart: React.FC<GanttChartProps> = ({
   onUpdateActivity,
   onEditActivityModal,
   onReorderActivities,
+  onRenamePhase,
 }) => {
+  // Phase Title Inline Editing state
+  const [editingPhase, setEditingPhase] = useState<string | null>(null);
+  const [editingPhaseValue, setEditingPhaseValue] = useState<string>('');
+
+  const handleStartEditPhase = (phase: string) => {
+    setEditingPhase(phase);
+    setEditingPhaseValue(phase);
+  };
+
+  const handleCancelPhaseEdit = () => {
+    setEditingPhase(null);
+    setEditingPhaseValue('');
+  };
+
+  const handleCommitPhaseEdit = (oldPhase: string) => {
+    const trimmed = editingPhaseValue.trim();
+    if (!trimmed) {
+      alert('Section title cannot be empty.');
+      return;
+    }
+    if (trimmed !== oldPhase && onRenamePhase) {
+      onRenamePhase(oldPhase, trimmed);
+    }
+    setEditingPhase(null);
+    setEditingPhaseValue('');
+  };
+
   // Inline editing state: { id, field }
   const [editingCell, setEditingCell] = useState<{ id: number; field: 'name' | 'resp' | 'start' | 'end' | 'pct' } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
@@ -441,7 +472,77 @@ export const GanttChart: React.FC<GanttChartProps> = ({
             {groupedPhases.map((group) => (
               <React.Fragment key={group.phase}>
                 <tr className="phase-row phase-header-row">
-                  <td colSpan={10} className="sticky-col-id">{group.phase}</td>
+                  <td colSpan={10} className="sticky-col-id phase-row-cell">
+                    {editingPhase === group.phase ? (
+                      <div className="phase-header-edit-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="phase-edit-field-group">
+                          <input
+                            type="text"
+                            className="phase-inline-input"
+                            value={editingPhaseValue}
+                            onChange={(e) => setEditingPhaseValue(e.target.value)}
+                            autoFocus
+                            onFocus={(e) => e.target.select()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleCommitPhaseEdit(group.phase);
+                              } else if (e.key === 'Escape') {
+                                handleCancelPhaseEdit();
+                              }
+                            }}
+                            placeholder="Enter section title..."
+                          />
+                          <div className="phase-edit-buttons">
+                            <button
+                              type="button"
+                              className="phase-save-btn"
+                              onClick={() => handleCommitPhaseEdit(group.phase)}
+                              title="Save Section Title (Enter)"
+                            >
+                              <Check size={13} />
+                              <span>Save</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="phase-cancel-btn"
+                              onClick={handleCancelPhaseEdit}
+                              title="Cancel (Esc)"
+                            >
+                              <X size={13} />
+                              <span>Cancel</span>
+                            </button>
+                          </div>
+                        </div>
+                        <span className="phase-edit-shortcut-hint">Press Enter to save • Esc to cancel</span>
+                      </div>
+                    ) : (
+                      <div className="phase-header-display-container">
+                        <div 
+                          className="phase-title-click-zone" 
+                          onClick={() => handleStartEditPhase(group.phase)}
+                          title="Click to rename this section"
+                        >
+                          <span className="phase-header-title-text">{group.phase}</span>
+                          <button
+                            type="button"
+                            className="phase-header-edit-trigger-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartEditPhase(group.phase);
+                            }}
+                            title="Edit section title"
+                          >
+                            <Edit2 size={12} />
+                            <span>Edit Title</span>
+                          </button>
+                        </div>
+
+                        <div className="phase-header-meta">
+                          <span className="phase-badge-count">{group.items.length} {group.items.length === 1 ? 'task' : 'tasks'}</span>
+                        </div>
+                      </div>
+                    )}
+                  </td>
                 </tr>
                 {group.items.map((act) => {
                   const status = computeStatus(act);
